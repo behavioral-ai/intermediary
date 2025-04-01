@@ -1,6 +1,7 @@
 package routingtest
 
 import (
+	"context"
 	"fmt"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/iox"
@@ -15,6 +16,7 @@ const (
 
 // Exchange - HTTP exchange function
 func Exchange(r *http.Request) (resp *http.Response, err error) {
+	ctx := context.Background()
 	uri := ""
 	values := r.URL.Query()
 	q := values.Encode()
@@ -29,7 +31,10 @@ func Exchange(r *http.Request) (resp *http.Response, err error) {
 	}
 	h := make(http.Header)
 	h.Add(iox.AcceptEncoding, iox.GzipEncoding)
-	req, _ := http.NewRequest(http.MethodGet, uri, nil)
+	if r.Context() != nil {
+		ctx = r.Context()
+	}
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
 	req.Header = h
 	resp, err = httpx.Do(req)
 	if err != nil {

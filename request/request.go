@@ -14,6 +14,7 @@ var (
 )
 
 type Requester interface {
+	Route() string
 	Log() bool
 	Timeout() time.Duration
 	Exchange() httpx.Exchange
@@ -33,7 +34,7 @@ func Do(agent Requester, method string, url string, h http.Header, r io.ReadClos
 	}
 	status = messaging.StatusOK()
 	if agent.Log() {
-		access.Log(access.EgressTraffic, start, time.Since(start), "", req, resp, access.Threshold{Timeout: agent.Timeout()})
+		access.Log(access.EgressTraffic, start, time.Since(start), agent.Route(), req, resp, access.Threshold{Timeout: agent.Timeout()})
 	}
 	return
 }

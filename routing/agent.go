@@ -16,6 +16,7 @@ import (
 
 const (
 	NamespaceName = "resiliency:agent/behavioral-ai/intermediary/routing"
+	Route         = "app"
 )
 
 var (
@@ -81,6 +82,7 @@ func (a *agentT) configure(m *messaging.Message) {
 
 // Log - implementation for Requester interface
 func (a *agentT) Log() bool                { return a.log }
+func (a *agentT) Route() string            { return Route }
 func (a *agentT) Timeout() time.Duration   { return a.timeout }
 func (a *agentT) Exchange() httpx.Exchange { return a.exchange }
 
