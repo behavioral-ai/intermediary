@@ -102,6 +102,9 @@ func (a *agentT) Link(next httpx.Exchange) httpx.Exchange {
 			a.handler.Message(eventing.NewNotifyMessage(status.WithAgent(a.Uri())))
 		}
 		if resp.StatusCode == http.StatusGatewayTimeout {
+			if resp.Header == nil {
+				resp.Header = make(http.Header)
+			}
 			resp.Header.Add(access.XTimeout, fmt.Sprintf("%v", a.timeout))
 		}
 		return resp, status.Err
