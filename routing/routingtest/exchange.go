@@ -1,7 +1,9 @@
 package routingtest
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/iox"
@@ -14,8 +16,8 @@ const (
 	yahooPath  = "/yahoo/search"
 )
 
-// Exchange - HTTP exchange function
-func Exchange(r *http.Request) (resp *http.Response, err error) {
+// SearchExchange - HTTP exchange function
+func searchExchange(r *http.Request) (resp *http.Response, err error) {
 	ctx := context.Background()
 	uri := ""
 	values := r.URL.Query()
@@ -41,4 +43,52 @@ func Exchange(r *http.Request) (resp *http.Response, err error) {
 		fmt.Printf("test: httx.Do() -> [err:%v]\n", err)
 	}
 	return
+}
+
+type echo struct {
+	Method string      `json:"method"`
+	Host   string      `json:"host"`
+	Url    string      `json:"url"`
+	Header http.Header `json:"header"`
+}
+
+// EchoExchange - HTTP exchange function
+func EchoExchange(r *http.Request) (resp *http.Response, err error) {
+	e := echo{
+		Method: r.Method,
+		Host:   r.Host,
+		Url:    r.URL.String(),
+		Header: r.Header,
+	}
+	buf, err1 := json.Marshal(e)
+	if err1 != nil {
+		return httpx.NewResponse(http.StatusBadRequest, nil, nil), nil
+	}
+	resp = httpx.NewResponse(http.StatusOK, nil, buf)
+	/*
+		if r.Header != nil && r.Header.Get(iox.AcceptEncoding) != "" {
+			return encode(buf, r.Header)
+		} else {
+			resp = httpx.NewResponse(http.StatusOK, nil, buf)
+		}
+
+	*/
+	return
+}
+
+func encode(in []byte, h http.Header) (resp *http.Response, err error) {
+	var w iox.EncodingWriter
+
+	buf := new(bytes.Buffer)
+	w, err = iox.NewEncodingWriter(buf, h)
+	if err != nil {
+		return httpx.NewResponse(http.StatusInternalServerError, nil, buf), err
+	}
+	cnt, err1 := w.Write(in)
+	if err1 != nil || cnt != len(in) {
+		return httpx.NewResponse(http.StatusInternalServerError, nil, buf), err1
+	}
+	rh := make(http.Header)
+	rh.Add(iox.ContentEncoding, iox.GzipEncoding)
+	return httpx.NewResponse(http.StatusOK, rh, buf.Bytes()), nil
 }
