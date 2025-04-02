@@ -62,20 +62,39 @@ func EchoExchange(r *http.Request) (resp *http.Response, err error) {
 	}
 	buf, err1 := json.Marshal(e)
 	if err1 != nil {
-		return httpx.NewResponse(http.StatusBadRequest, nil, nil), nil
+		return httpx.NewResponse(http.StatusBadRequest, nil, nil), err1
 	}
-	resp = httpx.NewResponse(http.StatusOK, nil, buf)
-	/*
-		if r.Header != nil && r.Header.Get(iox.AcceptEncoding) != "" {
-			return encode(buf, r.Header)
-		} else {
-			resp = httpx.NewResponse(http.StatusOK, nil, buf)
+	buf2, err2 := indent(buf)
+	if err2 != nil {
+		return httpx.NewResponse(http.StatusInternalServerError, nil, nil), err2
+	}
+	buf3, encoding, err3 := iox.EncodeContent(r.Header, buf2)
+	if err3 != nil {
+		return httpx.NewResponse(http.StatusInternalServerError, nil, nil), err3
+	}
+	if encoding != "" {
+		resp = httpx.NewResponse(http.StatusOK, nil, buf3)
+		if resp.Header == nil {
+			resp.Header = make(http.Header)
 		}
-
-	*/
+		resp.Header.Add(iox.ContentEncoding, encoding)
+	} else {
+		resp = httpx.NewResponse(http.StatusOK, nil, buf2)
+	}
 	return
 }
 
+func indent(src []byte) ([]byte, error) {
+	var buf bytes.Buffer
+
+	err := json.Indent(&buf, src, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+/*
 func encode(in []byte, h http.Header) (resp *http.Response, err error) {
 	var w iox.EncodingWriter
 
@@ -92,3 +111,6 @@ func encode(in []byte, h http.Header) (resp *http.Response, err error) {
 	rh.Add(iox.ContentEncoding, iox.GzipEncoding)
 	return httpx.NewResponse(http.StatusOK, rh, buf.Bytes()), nil
 }
+
+
+*/

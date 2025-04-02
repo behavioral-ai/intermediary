@@ -74,20 +74,16 @@ func ExampleEchoExchange() {
 	r.Flush()
 	// decoding when read all
 	buf, err := iox.ReadAll(r.Result().Body, r.Result().Header)
-	if err != nil {
-		fmt.Printf("test: iox.ReadAll() -> [err:%v]\n", err)
-	}
-	fmt.Printf("test: RoutingAgent [status:%v ] [encoding:%v] [buff:%v]\n", r.Result().StatusCode, r.Result().Header.Get(iox.ContentEncoding), string(buf))
+	fmt.Printf("test: iox.ReadAll() -> [buf:%v] [content-type:%v] [err:%v]\n", len(buf), http.DetectContentType(buf), err)
+	fmt.Printf("test: RoutingAgent [status:%v ] [encoding:%v] [%v]\n", r.Result().StatusCode, r.Result().Header.Get(iox.ContentEncoding), string(buf))
 
 	r = httptest.NewRecorder()
 	host.Exchange(r, req, chain)
 	r.Flush()
 	// not decoding when read all
 	buf, err = iox.ReadAll(r.Result().Body, nil)
-	if err != nil {
-		fmt.Printf("test: iox.RedAll() -> [err:%v]\n", err)
-	}
-	fmt.Printf("test: RoutingAgent [status:%v ] [encoding:%v] [buff:%v]\n", r.Result().StatusCode, r.Result().Header.Get(iox.ContentEncoding), string(buf))
+	fmt.Printf("test: iox.ReadAll() -> [buf:%v] [content-type:%v] [err:%v]\n", len(buf), http.DetectContentType(buf), err)
+	fmt.Printf("test: RoutingAgent [status:%v ] [encoding:%v] [%v]\n", r.Result().StatusCode, r.Result().Header.Get(iox.ContentEncoding), len(buf))
 
 	//Output:
 	//test: RoutingAgent [status:200 ] [encoding:] [buff:82980]
