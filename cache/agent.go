@@ -100,10 +100,11 @@ func (a *agentT) Exchange() httpx.Exchange { return a.exchange }
 func (a *agentT) Link(next httpx.Exchange) httpx.Exchange {
 	return func(r *http.Request) (resp *http.Response, err error) {
 		var (
-			url    string
-			status *messaging.Status
+			cacheable = a.cacheable(r)
+			url       string
+			status    *messaging.Status
 		)
-		if a.cacheable(r) {
+		if cacheable {
 			url = uri.BuildURL(a.hostName, r.URL.Path, r.URL.Query())
 			h := make(http.Header)
 			h.Add(httpx.XRequestId, r.Header.Get(httpx.XRequestId))
@@ -121,7 +122,7 @@ func (a *agentT) Link(next httpx.Exchange) httpx.Exchange {
 			return httpx.NewResponse(http.StatusNoContent, nil, nil), nil
 		}
 		resp, err = next(r)
-		if a.cacheable(r) && resp.StatusCode == http.StatusOK {
+		if cacheable && resp.StatusCode == http.StatusOK {
 			var buf []byte
 			buf, err = io.ReadAll(resp.Body)
 			if err != nil {
@@ -163,7 +164,7 @@ func (a *agentT) configure(m *messaging.Message) {
 }
 
 func (a *agentT) cacheable(r *http.Request) bool {
-	if a.hostName == "" || r.Method != http.MethodGet {
+	if a.hostName == "" || r.Method != http.MethodGet || httpx.CacheControlNoCache(r.Header) {
 		return false
 	}
 	return a.enabled.Load()
