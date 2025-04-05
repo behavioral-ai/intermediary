@@ -12,7 +12,7 @@ import (
 
 func ExampleNew() {
 	//url := "https://www.google.com/search"
-	a := newAgent(eventtest.New())
+	a := newAgent(eventtest.New(), messaging.NewTraceDispatcher())
 
 	fmt.Printf("test: newAgent() -> %v\n", a.Uri())
 	m := make(map[string]string)

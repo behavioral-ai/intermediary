@@ -3,6 +3,7 @@ package routingtest
 import (
 	"fmt"
 	"github.com/behavioral-ai/collective/eventing/eventtest"
+	"github.com/behavioral-ai/collective/exchange"
 	"github.com/behavioral-ai/core/host"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/iox"
@@ -14,7 +15,8 @@ import (
 )
 
 func _ExampleSearchExchange() {
-	agent := routing.New(eventtest.New())
+	agent := exchange.Agent(routing.NamespaceName) //routing.New(eventtest.New())
+	agent.Message(messaging.NewEventingHandlerMessage(eventtest.New()))
 
 	// configure exchange and host name
 	agent.Message(httpx.NewConfigExchangeMessage(searchExchange))
@@ -55,20 +57,26 @@ func _ExampleSearchExchange() {
 }
 
 func ExampleEchoExchange() {
-	agent := routing.New(eventtest.New())
+	//agent := routing.New(eventtest.New())
+	//agent := exchange.Agent(routing.NamespaceName)
+	//agent.Message(messaging.NewEventingHandlerMessage(eventtest.New()))
+	exchange.Message(messaging.NewEventingHandlerMessage(eventtest.New()).SetTo(routing.NamespaceName))
 
 	// configure exchange and host name
-	agent.Message(httpx.NewConfigExchangeMessage(EchoExchange))
+	//agent.Message(httpx.NewConfigExchangeMessage(EchoExchange))
+	exchange.Message(httpx.NewConfigExchangeMessage(EchoExchange).SetTo(routing.NamespaceName))
+
 	cfg := make(map[string]string)
 	cfg[config.AppHostKey] = "localhost:8080"
-	agent.Message(messaging.NewConfigMapMessage(cfg))
+	//agent.Message(messaging.NewConfigMapMessage(cfg))
+	exchange.Message(messaging.NewConfigMapMessage(cfg).SetTo(routing.NamespaceName))
 
 	url := "https://localhost:8081/search?q=golang"
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
 	req.Header = make(http.Header)
 	httpx.AddRequestId(req)
 
-	chain := httpx.BuildChain(agent)
+	chain := httpx.BuildChain(exchange.Agent(routing.NamespaceName))
 	r := httptest.NewRecorder()
 	host.Exchange(r, req, chain)
 	r.Flush()

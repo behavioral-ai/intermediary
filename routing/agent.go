@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/behavioral-ai/collective/eventing"
+	"github.com/behavioral-ai/collective/exchange"
 	"github.com/behavioral-ai/core/access"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/messaging"
@@ -33,8 +34,9 @@ type agentT struct {
 }
 
 // New - create a new cache agent
-func New(handler messaging.Agent) messaging.Agent {
-	return newAgent(handler)
+func init() {
+	a := newAgent(eventing.Agent)
+	exchange.Register(a)
 }
 
 func newAgent(handler messaging.Agent) *agentT {
@@ -60,24 +62,6 @@ func (a *agentT) Message(m *messaging.Message) {
 		a.configure(m)
 		return
 	}
-}
-
-func (a *agentT) configure(m *messaging.Message) {
-	var (
-		ok bool
-		ex httpx.Exchange
-	)
-
-	if ex, ok = httpx.ConfigExchangeContent(m); ok {
-		a.exchange = ex
-	}
-	if a.hostName, ok = config.AppHostName(a, m); !ok {
-		return
-	}
-	if a.timeout, ok = config.Timeout(a, m); !ok {
-		return
-	}
-	messaging.Reply(m, messaging.StatusOK(), a.Uri())
 }
 
 // Log - implementation for Requester interface
@@ -109,4 +93,26 @@ func (a *agentT) Link(next httpx.Exchange) httpx.Exchange {
 		}
 		return resp, status.Err
 	}
+}
+
+func (a *agentT) configure(m *messaging.Message) {
+	switch m.ContentType() {
+	case httpx.ContentTypeExchange:
+		if ex, ok := httpx.ConfigExchangeContent(m); ok {
+			a.exchange = ex
+		}
+	case messaging.ContentTypeEventing:
+		if handler, ok := messaging.EventingHandlerContent(m); ok {
+			a.handler = handler
+		}
+	case messaging.ContentTypeMap:
+		var ok bool
+		if a.hostName, ok = config.AppHostName(a, m); !ok {
+			return
+		}
+		if a.timeout, ok = config.Timeout(a, m); !ok {
+			return
+		}
+	}
+	messaging.Reply(m, messaging.StatusOK(), a.Uri())
 }

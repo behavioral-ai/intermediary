@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/behavioral-ai/collective/content"
 	"github.com/behavioral-ai/collective/eventing"
+	"github.com/behavioral-ai/collective/exchange"
 	"github.com/behavioral-ai/core/access"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/messaging"
@@ -18,8 +19,9 @@ import (
 )
 
 const (
-	NamespaceName = "resiliency:agent/behavioral-ai/intermediary/cache"
-	Route         = "cache"
+	NamespaceName  = "resiliency:agent/behavioral-ai/intermediary/cache"
+	Route          = "cache"
+	defaultTimeout = time.Millisecond * 3000
 )
 
 var (
@@ -34,25 +36,29 @@ type agentT struct {
 	hostName string
 	timeout  time.Duration
 
-	exchange httpx.Exchange
-	ticker   *messaging.Ticker
-	emissary *messaging.Channel
-	handler  messaging.Agent
+	exchange   httpx.Exchange
+	ticker     *messaging.Ticker
+	emissary   *messaging.Channel
+	handler    messaging.Agent
+	dispatcher messaging.Dispatcher
 }
 
 // New - create a new cache agent
-func New(handler messaging.Agent) messaging.Agent {
-	return newAgent(handler)
+func init() {
+	a := newAgent(eventing.Agent, nil)
+	exchange.Register(a)
 }
 
-func newAgent(handler messaging.Agent) *agentT {
+func newAgent(handler messaging.Agent, dispatcher messaging.Dispatcher) *agentT {
 	a := new(agentT)
 	a.enabled = new(atomic.Bool)
 	a.enabled.Store(true)
+	a.timeout = defaultTimeout
 	a.exchange = httpx.Do
 	a.ticker = messaging.NewTicker(messaging.Emissary, maxDuration)
 	a.emissary = messaging.NewEmissaryChannel()
 	a.handler = handler
+	a.dispatcher = dispatcher
 	return a
 }
 
@@ -146,19 +152,24 @@ func (a *agentT) Link(next httpx.Exchange) httpx.Exchange {
 }
 
 func (a *agentT) configure(m *messaging.Message) {
-	var (
-		ok bool
-		ex httpx.Exchange
-	)
-
-	if ex, ok = httpx.ConfigExchangeContent(m); ok {
-		a.exchange = ex
-	}
-	if a.hostName, ok = config.CacheHostName(a, m); !ok {
-		return
-	}
-	if a.timeout, ok = config.Timeout(a, m); !ok {
-		return
+	switch m.ContentType() {
+	case messaging.ContentTypeMap:
+		var ok bool
+		if a.hostName, ok = config.CacheHostName(a, m); !ok {
+			return
+		}
+	case httpx.ContentTypeExchange:
+		if ex, ok := httpx.ConfigExchangeContent(m); ok {
+			a.exchange = ex
+		}
+	case messaging.ContentTypeEventing:
+		if handler, ok := messaging.EventingHandlerContent(m); ok {
+			a.handler = handler
+		}
+	case messaging.ContentTypeDispatcher:
+		if dispatcher, ok := messaging.DispatcherContent(m); ok {
+			a.dispatcher = dispatcher
+		}
 	}
 	messaging.Reply(m, messaging.StatusOK(), a.Uri())
 }
@@ -181,8 +192,10 @@ func (a *agentT) setEnabled(p metrics.TrafficProfile) {
 	}
 }
 
-func (a *agentT) dispatch(channel any, event1 string) {
-	a.handler.Message(eventing.NewDispatchMessage(a, channel, event1))
+func (a *agentT) dispatch(channel any, event string) {
+	if a.dispatcher != nil {
+		a.dispatcher.Dispatch(a, channel, event)
+	}
 }
 
 func (a *agentT) emissaryShutdown() {
