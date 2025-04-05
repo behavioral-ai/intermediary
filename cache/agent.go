@@ -45,20 +45,20 @@ type agentT struct {
 
 // New - create a new cache agent
 func init() {
-	a := newAgent(eventing.Agent, nil)
+	a := newAgent(eventing.Agent)
 	exchange.Register(a)
 }
 
-func newAgent(handler messaging.Agent, dispatcher messaging.Dispatcher) *agentT {
+func newAgent(handler messaging.Agent) *agentT {
 	a := new(agentT)
 	a.enabled = new(atomic.Bool)
 	a.enabled.Store(true)
 	a.timeout = defaultTimeout
+
 	a.exchange = httpx.Do
 	a.ticker = messaging.NewTicker(messaging.Emissary, maxDuration)
 	a.emissary = messaging.NewEmissaryChannel()
 	a.handler = handler
-	a.dispatcher = dispatcher
 	return a
 }
 
