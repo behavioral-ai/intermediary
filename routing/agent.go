@@ -30,16 +30,16 @@ type agentT struct {
 	timeout  time.Duration
 
 	exchange httpx.Exchange
-	handler  messaging.Agent
+	handler  eventing.Agent
 }
 
 // New - create a new cache agent
 func init() {
-	a := newAgent(eventing.Agent)
+	a := newAgent(eventing.Handler)
 	exchange.Register(a)
 }
 
-func newAgent(handler messaging.Agent) *agentT {
+func newAgent(handler eventing.Agent) *agentT {
 	a := new(agentT)
 	a.log = true
 	a.exchange = httpx.Do
@@ -75,7 +75,7 @@ func (a *agentT) Link(next httpx.Exchange) httpx.Exchange {
 	return func(r *http.Request) (resp *http.Response, err error) {
 		if a.hostName == "" {
 			status := messaging.NewStatusError(messaging.StatusInvalidArgument, errors.New("host configuration is empty"), a.Uri())
-			a.handler.Message(eventing.NewNotifyMessage(status))
+			a.handler.Notify(status)
 			return serverErrorResponse, status.Err
 		}
 		var status *messaging.Status
@@ -83,7 +83,7 @@ func (a *agentT) Link(next httpx.Exchange) httpx.Exchange {
 		url := uri.BuildURL(a.hostName, r.URL.Path, r.URL.Query())
 		resp, status = request.Do(a, r.Method, url, httpx.CloneHeaderWithEncoding(r), r.Body)
 		if status.Err != nil {
-			a.handler.Message(eventing.NewNotifyMessage(status.WithAgent(a.Uri())))
+			a.handler.Notify(status.WithAgent(a.Uri()))
 		}
 		if resp.StatusCode == http.StatusGatewayTimeout {
 			if resp.Header == nil {
@@ -100,10 +100,6 @@ func (a *agentT) configure(m *messaging.Message) {
 	case httpx.ContentTypeExchange:
 		if ex, ok := httpx.ConfigExchangeContent(m); ok {
 			a.exchange = ex
-		}
-	case messaging.ContentTypeEventing:
-		if handler, ok := messaging.EventingHandlerContent(m); ok {
-			a.handler = handler
 		}
 	case messaging.ContentTypeMap:
 		var ok bool

@@ -2,7 +2,6 @@ package cachetest
 
 import (
 	"fmt"
-	"github.com/behavioral-ai/collective/eventing/eventtest"
 	"github.com/behavioral-ai/collective/exchange"
 	"github.com/behavioral-ai/core/host"
 	"github.com/behavioral-ai/core/httpx"
@@ -16,7 +15,7 @@ import (
 
 func ExampleExchange() {
 	agent := exchange.Agent(cache.NamespaceName)
-	agent.Message(messaging.NewEventingHandlerMessage(eventtest.New()))
+	//agent.Message(messaging.NewEventingHandlerMessage(eventtest.New()))
 
 	// configure exchange and host name
 	agent.Message(httpx.NewConfigExchangeMessage(Exchange))

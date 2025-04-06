@@ -11,7 +11,7 @@ import (
 	"github.com/behavioral-ai/core/uri"
 	"github.com/behavioral-ai/intermediary/config"
 	"github.com/behavioral-ai/intermediary/request"
-	"github.com/behavioral-ai/traffic/metrics"
+	"github.com/behavioral-ai/traffic/profile"
 	"io"
 	"net/http"
 	"sync/atomic"
@@ -36,20 +36,19 @@ type agentT struct {
 	hostName string
 	timeout  time.Duration
 
-	exchange   httpx.Exchange
-	ticker     *messaging.Ticker
-	emissary   *messaging.Channel
-	handler    messaging.Agent
-	dispatcher messaging.Dispatcher
+	exchange httpx.Exchange
+	ticker   *messaging.Ticker
+	emissary *messaging.Channel
+	handler  eventing.Agent
 }
 
 // New - create a new cache agent
 func init() {
-	a := newAgent(eventing.Agent)
+	a := newAgent(eventing.Handler)
 	exchange.Register(a)
 }
 
-func newAgent(handler messaging.Agent) *agentT {
+func newAgent(handler eventing.Agent) *agentT {
 	a := new(agentT)
 	a.enabled = new(atomic.Bool)
 	a.enabled.Store(true)
@@ -121,7 +120,7 @@ func (a *agentT) Link(next httpx.Exchange) httpx.Exchange {
 				return resp, nil
 			}
 			if status.Err != nil {
-				a.handler.Message(eventing.NewNotifyMessage(status.WithAgent(a.Uri())))
+				a.handler.Notify(status.WithAgent(a.Uri()))
 			}
 		}
 		if next == nil {
@@ -133,7 +132,7 @@ func (a *agentT) Link(next httpx.Exchange) httpx.Exchange {
 			buf, err = io.ReadAll(resp.Body)
 			if err != nil {
 				status = messaging.NewStatusError(messaging.StatusIOError, err, a.Uri())
-				a.handler.Message(eventing.NewNotifyMessage(status))
+				a.handler.Notify(status)
 				return serverErrorResponse, err
 			}
 			resp.ContentLength = int64(len(buf))
@@ -143,7 +142,7 @@ func (a *agentT) Link(next httpx.Exchange) httpx.Exchange {
 				h.Add(httpx.XRequestId, r.Header.Get(httpx.XRequestId))
 				_, status = request.Do(a, http.MethodPut, url, h, io.NopCloser(bytes.NewReader(buf)))
 				if status.Err != nil {
-					a.handler.Message(eventing.NewNotifyMessage(status.WithAgent(a.Uri())))
+					a.handler.Notify(status.WithAgent(a.Uri()))
 				}
 			}()
 		}
@@ -162,14 +161,6 @@ func (a *agentT) configure(m *messaging.Message) {
 		if ex, ok := httpx.ConfigExchangeContent(m); ok {
 			a.exchange = ex
 		}
-	case messaging.ContentTypeEventing:
-		if handler, ok := messaging.EventingHandlerContent(m); ok {
-			a.handler = handler
-		}
-	case messaging.ContentTypeDispatcher:
-		if dispatcher, ok := messaging.DispatcherContent(m); ok {
-			a.dispatcher = dispatcher
-		}
 	}
 	messaging.Reply(m, messaging.StatusOK(), a.Uri())
 }
@@ -181,20 +172,14 @@ func (a *agentT) cacheable(r *http.Request) bool {
 	return a.enabled.Load()
 }
 
-func (a *agentT) setEnabled(p metrics.TrafficProfile) {
+func (a *agentT) setEnabled(p *profile.Traffic) {
 	tp := p.Now()
-	if tp == metrics.TrafficOffPeak {
+	if tp == profile.TrafficOffPeak {
 		a.enabled.Store(false)
 	} else {
-		if tp == metrics.TrafficPeak {
+		if tp == profile.TrafficPeak {
 			a.enabled.Store(true)
 		}
-	}
-}
-
-func (a *agentT) dispatch(channel any, event string) {
-	if a.dispatcher != nil {
-		a.dispatcher.Dispatch(a, channel, event)
 	}
 }
 
