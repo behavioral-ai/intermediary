@@ -60,7 +60,6 @@ func (a *agentT) Message(m *messaging.Message) {
 	}
 	if m.Event() == messaging.ConfigEvent {
 		a.configure(m)
-		return
 	}
 }
 

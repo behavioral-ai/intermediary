@@ -12,6 +12,12 @@ github.com/behavioral-ai/collective v0.0.0-20250405204214-686c9da0a496 h1:1LzTG3
 github.com/behavioral-ai/collective v0.0.0-20250405204214-686c9da0a496/go.mod h1:0XkA/kL0tkj9+IV0HD+iBdEy4/h3eFjNJuPx6g0WLUU=
 github.com/behavioral-ai/collective v0.0.0-20250406151311-efc1f1ff758f h1:AXRmqyHGVmnO9z02uYYwn8LorKINscj2vEeG9V+hzD8=
 github.com/behavioral-ai/collective v0.0.0-20250406151311-efc1f1ff758f/go.mod h1:iTlHuLmjstIBNON3cWj895Z5Zwtrd2g00t1PMb9iOmY=
+github.com/behavioral-ai/collective v0.0.0-20250408122022-c1b3e3f9805b h1:Cnpi0LwGSOQpAYxDtl5EV2Gu2DGvVQ8r4525ncPj1fY=
+github.com/behavioral-ai/collective v0.0.0-20250408122022-c1b3e3f9805b/go.mod h1:F7iOfuZRBNV4GI/vMo70vej+GhUWIHtM9Vuh4n1/Oz0=
+github.com/behavioral-ai/collective v0.0.0-20250408123503-2da8b9e93379 h1:GKv5VZYME49tS4KXPatBM6bw+E3yh5my/uv4v5Acf7w=
+github.com/behavioral-ai/collective v0.0.0-20250408123503-2da8b9e93379/go.mod h1:F7iOfuZRBNV4GI/vMo70vej+GhUWIHtM9Vuh4n1/Oz0=
+github.com/behavioral-ai/collective v0.0.0-20250408180726-6640e80bc363 h1:7tlhHk4tqpu9IUzCx/dGAoHM0mO3+pKZBJYtXdHJi8o=
+github.com/behavioral-ai/collective v0.0.0-20250408180726-6640e80bc363/go.mod h1:MT0nmLfhbGnv3F2bs2diuOjsJy0sA/iXSpE08xVUvCE=
 github.com/behavioral-ai/core v0.0.0-20250401100236-9f78002e1d6b h1:WO8aPaswAIiBj8iT2GnnH/vlah9Ig3VYJZfI4uoSJGk=
 github.com/behavioral-ai/core v0.0.0-20250401100236-9f78002e1d6b/go.mod h1:sqpbaRPtMXUb4j6CbCuwWvQrD6pUKJm5oZEKPDynlPE=
 github.com/behavioral-ai/core v0.0.0-20250401135116-c2b06322247b h1:jaOaBpJtMxmAUwa0MbvdFKFHVaeqtoTYp5ne9p5f/6k=
@@ -40,6 +46,12 @@ github.com/behavioral-ai/core v0.0.0-20250405123750-99f25c3659fb h1:2ofiyg3Opdpg
 github.com/behavioral-ai/core v0.0.0-20250405123750-99f25c3659fb/go.mod h1:sqpbaRPtMXUb4j6CbCuwWvQrD6pUKJm5oZEKPDynlPE=
 github.com/behavioral-ai/core v0.0.0-20250406140313-6a859c942e1f h1:JTFclu/TKTipAWk0eG7h5yFP8Bspz4gYokSCwxyk+zI=
 github.com/behavioral-ai/core v0.0.0-20250406140313-6a859c942e1f/go.mod h1:sqpbaRPtMXUb4j6CbCuwWvQrD6pUKJm5oZEKPDynlPE=
+github.com/behavioral-ai/core v0.0.0-20250407200305-2723998cf606 h1:dUl2LPT0VJkZJxVEDb16/EhxenVKgZQMMMgIbLTHtyo=
+github.com/behavioral-ai/core v0.0.0-20250407200305-2723998cf606/go.mod h1:sqpbaRPtMXUb4j6CbCuwWvQrD6pUKJm5oZEKPDynlPE=
+github.com/behavioral-ai/core v0.0.0-20250408121953-d851041026e4 h1:Tqn8P5Myr/ac+A62618GlhozlI/AfS6xitkqnfrwKm8=
+github.com/behavioral-ai/core v0.0.0-20250408121953-d851041026e4/go.mod h1:sqpbaRPtMXUb4j6CbCuwWvQrD6pUKJm5oZEKPDynlPE=
+github.com/behavioral-ai/core v0.0.0-20250408173514-d423391c9c73 h1:h7n7NpA8hDL8uZs3fWljzDuRaSF36370CQeRkBuaNm0=
+github.com/behavioral-ai/core v0.0.0-20250408173514-d423391c9c73/go.mod h1:sqpbaRPtMXUb4j6CbCuwWvQrD6pUKJm5oZEKPDynlPE=
 github.com/behavioral-ai/traffic v0.0.0-20250331154538-809afd74acd7 h1:8jk3gWpmf2UWEGjfpCy6WDEXBsLLdRacjjOWLjsJP0A=
 github.com/behavioral-ai/traffic v0.0.0-20250331154538-809afd74acd7/go.mod h1:dS4j9cb+FWd90Wm/HluRnWJPKmd+7EcBLI/AgqFq3o0=
 github.com/behavioral-ai/traffic v0.0.0-20250402175519-ccde10574a4d h1:LvgVLRTumkWMevuUw/r8hIhHK4AHtjRXtpFaMiXcQH4=
@@ -50,5 +62,9 @@ github.com/behavioral-ai/traffic v0.0.0-20250405230954-3fd3920f490d h1:Z/73gGdKU
 github.com/behavioral-ai/traffic v0.0.0-20250405230954-3fd3920f490d/go.mod h1:XV8l1LIKXb3oUXBvcfujNW2IBR/LOFaOyK+gBbBa4bw=
 github.com/behavioral-ai/traffic v0.0.0-20250406152255-678d4618f3cd h1:BT/mlJESe5DLkaPOGuBB6o7jwPC3KAuI592P8S0PfdI=
 github.com/behavioral-ai/traffic v0.0.0-20250406152255-678d4618f3cd/go.mod h1:2gHuPp0TCPgAHNVMjlXzdi6/8VQ1+F3UjEN5WNPUlhA=
+github.com/behavioral-ai/traffic v0.0.0-20250406164302-e9e35be7c550 h1:uAljJdCvsZ70O+8CJpJ4wQ0W+5SQm35Ytqrm8HNkb44=
+github.com/behavioral-ai/traffic v0.0.0-20250406164302-e9e35be7c550/go.mod h1:2gHuPp0TCPgAHNVMjlXzdi6/8VQ1+F3UjEN5WNPUlhA=
+github.com/behavioral-ai/traffic v0.0.0-20250408181857-be183efc56a2 h1:Eqb7gkTEQCee2/nQQKKeHcadLrBaxTGAJi/i8jHYNBU=
+github.com/behavioral-ai/traffic v0.0.0-20250408181857-be183efc56a2/go.mod h1:pFk1zd2bO/ardofVYD3EGCNQJSl+Ml0FOZcojEh9PUw=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=

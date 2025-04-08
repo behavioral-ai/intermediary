@@ -55,7 +55,7 @@ func newAgent(handler eventing.Agent) *agentT {
 	a.timeout = defaultTimeout
 
 	a.exchange = httpx.Do
-	a.ticker = messaging.NewTicker(messaging.Emissary, maxDuration)
+	a.ticker = messaging.NewTicker(messaging.ChannelEmissary, maxDuration)
 	a.emissary = messaging.NewEmissaryChannel()
 	a.handler = handler
 	return a
@@ -72,27 +72,27 @@ func (a *agentT) Message(m *messaging.Message) {
 	if m == nil {
 		return
 	}
-	if m.Event() == messaging.ConfigEvent {
-		a.configure(m)
-		return
-	}
-	if m.Event() == messaging.StartupEvent {
-		a.run()
-		return
-	}
 	if !a.running {
+		if m.Event() == messaging.ConfigEvent {
+			a.configure(m)
+			return
+		}
+		if m.Event() == messaging.StartupEvent {
+			a.run()
+			a.running = true
+			return
+		}
 		return
+	}
+	if m.Event() == messaging.ShutdownEvent {
+		a.running = false
 	}
 	a.emissary.C <- m
 }
 
 // Run - run the agent
 func (a *agentT) run() {
-	if a.running {
-		return
-	}
 	go emissaryAttend(a, content.Resolver)
-	a.running = true
 }
 
 // Log - implementation for Requester interface
