@@ -80,6 +80,7 @@ func (a *agentT) Link(next httpx.Exchange) httpx.Exchange {
 		var status *messaging.Status
 
 		url := uri.BuildURL(a.hostName, r.URL.Path, r.URL.Query())
+		// TODO : need to check and remove Caching header.
 		resp, status = request.Do(a, r.Method, url, httpx.CloneHeaderWithEncoding(r), r.Body)
 		if status.Err != nil {
 			a.handler.Notify(status.WithAgent(a.Uri()))

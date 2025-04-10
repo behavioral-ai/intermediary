@@ -2,16 +2,14 @@ package cache
 
 import (
 	"bytes"
-	"github.com/behavioral-ai/collective/content"
 	"github.com/behavioral-ai/collective/eventing"
 	"github.com/behavioral-ai/collective/exchange"
-	"github.com/behavioral-ai/core/access"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/messaging"
 	"github.com/behavioral-ai/core/uri"
 	"github.com/behavioral-ai/intermediary/config"
+	"github.com/behavioral-ai/intermediary/profile"
 	"github.com/behavioral-ai/intermediary/request"
-	"github.com/behavioral-ai/traffic/profile"
 	"io"
 	"net/http"
 	"sync/atomic"
@@ -25,9 +23,9 @@ const (
 )
 
 var (
-	okResponse          = httpx.NewResponse(http.StatusOK, nil, nil)
+	noContentResponse   = httpx.NewResponse(http.StatusNoContent, nil, nil)
 	serverErrorResponse = httpx.NewResponse(http.StatusInternalServerError, nil, nil)
-	maxDuration         = time.Second * 15
+	maxDuration         = time.Minute * 30
 )
 
 type agentT struct {
@@ -35,6 +33,7 @@ type agentT struct {
 	enabled  *atomic.Bool
 	hostName string
 	timeout  time.Duration
+	profile  profile.Cache
 
 	exchange httpx.Exchange
 	ticker   *messaging.Ticker
@@ -92,7 +91,7 @@ func (a *agentT) Message(m *messaging.Message) {
 
 // Run - run the agent
 func (a *agentT) run() {
-	go emissaryAttend(a, content.Resolver)
+	go emissaryAttend(a)
 }
 
 // Log - implementation for Requester interface
@@ -116,7 +115,7 @@ func (a *agentT) Link(next httpx.Exchange) httpx.Exchange {
 			resp, status = request.Do(a, http.MethodGet, url, h, nil)
 			if resp.StatusCode == http.StatusOK {
 				// Need for analytics
-				resp.Header.Add(access.XCached, "true")
+				//resp.Header.Add(access.XCached, "true")
 				return resp, nil
 			}
 			if status.Err != nil {
@@ -124,7 +123,7 @@ func (a *agentT) Link(next httpx.Exchange) httpx.Exchange {
 			}
 		}
 		if next == nil {
-			return httpx.NewResponse(http.StatusNoContent, nil, nil), nil
+			return noContentResponse, nil
 		}
 		resp, err = next(r)
 		if cacheable && resp.StatusCode == http.StatusOK {
@@ -170,17 +169,6 @@ func (a *agentT) cacheable(r *http.Request) bool {
 		return false
 	}
 	return a.enabled.Load()
-}
-
-func (a *agentT) setEnabled(p *profile.Traffic) {
-	tp := p.Now()
-	if tp == profile.TrafficOffPeak {
-		a.enabled.Store(false)
-	} else {
-		if tp == profile.TrafficPeak {
-			a.enabled.Store(true)
-		}
-	}
 }
 
 func (a *agentT) emissaryShutdown() {

@@ -1,22 +1,18 @@
 package cache
 
 import (
-	"github.com/behavioral-ai/collective/content"
 	"github.com/behavioral-ai/core/messaging"
-	"github.com/behavioral-ai/traffic/profile"
 )
 
 // emissary attention
-func emissaryAttend(agent *agentT, resolver *content.Resolution) {
+func emissaryAttend(agent *agentT) {
 	paused := false
-	var p *profile.Traffic
 
 	for {
 		select {
 		case <-agent.ticker.C():
 			if !paused {
-				p = profile.NewTraffic(p, resolver)
-				agent.setEnabled(p)
+				agent.enabled.Store(agent.profile.Now())
 			}
 		default:
 		}
