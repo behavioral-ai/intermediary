@@ -6,6 +6,7 @@ import (
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/iox"
 	"github.com/behavioral-ai/core/messaging"
+	"github.com/behavioral-ai/core/rest"
 	"github.com/behavioral-ai/intermediary/config"
 	"net/http"
 )
@@ -26,7 +27,7 @@ func ExampleNew() {
 
 }
 
-func routingExchange(next httpx.Exchange) httpx.Exchange {
+func routingExchange(next rest.Exchange) rest.Exchange {
 	return func(r *http.Request) (resp *http.Response, err error) {
 		h := make(http.Header)
 		h.Add(iox.AcceptEncoding, iox.GzipEncoding)

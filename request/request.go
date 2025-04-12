@@ -4,6 +4,7 @@ import (
 	"github.com/behavioral-ai/core/access"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/messaging"
+	"github.com/behavioral-ai/core/rest"
 	"io"
 	"net/http"
 	"time"
@@ -17,7 +18,7 @@ type Requester interface {
 	Route() string
 	Log() bool
 	Timeout() time.Duration
-	Exchange() httpx.Exchange
+	Exchange() rest.Exchange
 }
 
 func Do(agent Requester, method string, url string, h http.Header, r io.ReadCloser) (resp *http.Response, status *messaging.Status) {

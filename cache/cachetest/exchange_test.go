@@ -7,6 +7,7 @@ import (
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/iox"
 	"github.com/behavioral-ai/core/messaging"
+	"github.com/behavioral-ai/core/rest"
 	"github.com/behavioral-ai/intermediary/cache"
 	"github.com/behavioral-ai/intermediary/config"
 	"net/http"
@@ -28,7 +29,7 @@ func ExampleExchange() {
 	req.Header = make(http.Header)
 	httpx.AddRequestId(req)
 
-	chain := httpx.BuildChain(agent, NextExchange)
+	chain := rest.BuildChain(agent, NextExchange)
 	r := httptest.NewRecorder()
 	host.Exchange(r, req, chain)
 	r.Flush()

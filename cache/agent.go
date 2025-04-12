@@ -6,6 +6,7 @@ import (
 	"github.com/behavioral-ai/collective/exchange"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/messaging"
+	"github.com/behavioral-ai/core/rest"
 	"github.com/behavioral-ai/core/uri"
 	"github.com/behavioral-ai/intermediary/config"
 	"github.com/behavioral-ai/intermediary/profile"
@@ -35,7 +36,7 @@ type agentT struct {
 	timeout  time.Duration
 	profile  profile.Cache
 
-	exchange httpx.Exchange
+	exchange rest.Exchange
 	ticker   *messaging.Ticker
 	emissary *messaging.Channel
 	handler  eventing.Agent
@@ -95,13 +96,13 @@ func (a *agentT) run() {
 }
 
 // Log - implementation for Requester interface
-func (a *agentT) Log() bool                { return true }
-func (a *agentT) Route() string            { return Route }
-func (a *agentT) Timeout() time.Duration   { return a.timeout }
-func (a *agentT) Exchange() httpx.Exchange { return a.exchange }
+func (a *agentT) Log() bool               { return true }
+func (a *agentT) Route() string           { return Route }
+func (a *agentT) Timeout() time.Duration  { return a.timeout }
+func (a *agentT) Exchange() rest.Exchange { return a.exchange }
 
 // Link - chainable exchange
-func (a *agentT) Link(next httpx.Exchange) httpx.Exchange {
+func (a *agentT) Link(next rest.Exchange) rest.Exchange {
 	return func(r *http.Request) (resp *http.Response, err error) {
 		var (
 			cacheable = a.cacheable(r)
