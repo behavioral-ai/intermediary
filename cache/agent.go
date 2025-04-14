@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/behavioral-ai/collective/eventing"
 	"github.com/behavioral-ai/collective/exchange"
+	"github.com/behavioral-ai/core/access"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/messaging"
 	"github.com/behavioral-ai/core/rest"
@@ -104,44 +105,34 @@ func (a *agentT) Do() rest.Exchange      { return a.exchange }
 // Link - chainable exchange
 func (a *agentT) Link(next rest.Exchange) rest.Exchange {
 	return func(r *http.Request) (resp *http.Response, err error) {
-		var (
-			cacheable = a.cacheable(r)
-			url       string
-			status    *messaging.Status
-		)
-		if cacheable {
-			url = uri.BuildURL(a.hostName, r.URL.Path, r.URL.Query())
-			h := make(http.Header)
-			h.Add(httpx.XRequestId, r.Header.Get(httpx.XRequestId))
-			resp, status = request.Do(a, http.MethodGet, url, h, nil)
-			if resp.StatusCode == http.StatusOK {
-				// Need for analytics
-				//resp.Header.Add(access.XCached, "true")
-				return resp, nil
-			}
-			if status.Err != nil {
-				a.handler.Notify(status.WithAgent(a.Uri()))
-			}
+		if !a.cacheable(r) {
+			return next(r)
 		}
+		var (
+			url    string
+			status *messaging.Status
+		)
+		// cache lookup
+		url = uri.BuildURL(a.hostName, r.URL.Path, r.URL.Query())
+		h := make(http.Header)
+		h.Add(httpx.XRequestId, r.Header.Get(httpx.XRequestId))
+		resp, status = request.Do(a, http.MethodGet, url, h, nil)
+		if resp.StatusCode == http.StatusOK {
+			resp.Header.Add(access.XCached, "true")
+			return resp, nil
+		}
+		resp.Header.Add(access.XCached, "false")
+		if status.Err != nil {
+			a.handler.Notify(status.WithAgent(a.Uri()))
+		}
+		// cache miss, call next exchange
 		resp, err = next(r)
-		if cacheable && resp.StatusCode == http.StatusOK {
-			var buf []byte
-			buf, err = io.ReadAll(resp.Body)
+		if resp.StatusCode == http.StatusOK {
+			// cache update
+			err = a.cacheUpdate(url, r, resp)
 			if err != nil {
-				status = messaging.NewStatusError(messaging.StatusIOError, err, a.Uri())
-				a.handler.Notify(status)
 				return serverErrorResponse, err
 			}
-			resp.ContentLength = int64(len(buf))
-			resp.Body = io.NopCloser(bytes.NewReader(buf))
-			go func() {
-				h := httpx.CloneHeader(resp.Header)
-				h.Add(httpx.XRequestId, r.Header.Get(httpx.XRequestId))
-				_, status = request.Do(a, http.MethodPut, url, h, io.NopCloser(bytes.NewReader(buf)))
-				if status.Err != nil {
-					a.handler.Notify(status.WithAgent(a.Uri()))
-				}
-			}()
 		}
 		return
 	}
@@ -172,4 +163,32 @@ func (a *agentT) cacheable(r *http.Request) bool {
 func (a *agentT) emissaryShutdown() {
 	a.emissary.Close()
 	a.ticker.Stop()
+}
+
+func (a *agentT) cacheUpdate(url string, r *http.Request, resp *http.Response) error {
+	var (
+		buf    []byte
+		err    error
+		status *messaging.Status
+	)
+	// TODO: Need to reset the body in the response after reading it.
+	buf, err = io.ReadAll(resp.Body)
+	if err != nil {
+		status = messaging.NewStatusError(messaging.StatusIOError, err, a.Uri())
+		a.handler.Notify(status)
+		return err
+	}
+	resp.ContentLength = int64(len(buf))
+	resp.Body = io.NopCloser(bytes.NewReader(buf))
+
+	// cache update
+	go func() {
+		h2 := httpx.CloneHeader(resp.Header)
+		h2.Add(httpx.XRequestId, r.Header.Get(httpx.XRequestId))
+		_, status = request.Do(a, http.MethodPut, url, h2, io.NopCloser(bytes.NewReader(buf)))
+		if status.Err != nil {
+			a.handler.Notify(status.WithAgent(a.Uri()))
+		}
+	}()
+	return nil
 }
