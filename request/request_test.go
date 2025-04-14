@@ -5,22 +5,23 @@ import (
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/iox"
 	"github.com/behavioral-ai/core/messaging"
+	"github.com/behavioral-ai/core/rest"
 	"net/http"
 	"time"
 )
 
 type agentT struct {
 	timeout  time.Duration
-	exchange httpx.Exchange
+	exchange rest.Exchange
 }
 
 func (a *agentT) String() string               { return a.Uri() }
 func (a *agentT) Uri() string                  { return "agent:request" }
 func (a *agentT) Message(m *messaging.Message) {}
+func (a *agentT) Route() string                { return "cache" }
+func (a *agentT) Log() bool                    { return true }
 func (a *agentT) Timeout() time.Duration       { return a.timeout }
-func (a *agentT) Do() httpx.Exchange           { return a.exchange }
-
-//func (a *agentT) Exchange(next httpx.Exchange) httpx.Exchange { return nil }
+func (a *agentT) Do() rest.Exchange            { return a.exchange }
 
 func ExampleDo_Get() {
 	url := "https://www.google.com/search?q=golang"
@@ -68,7 +69,7 @@ func ExampleDo_Get_Timeout() {
 
 	//Output:
 	//test: Do() -> [resp:200] [status:OK]
-	//test: iox.ReadAll() -> [buf:82920] [err:<nil>]
-	//test: Do() -> [resp:504] [status:OK]
+	//test: iox.ReadAll() -> [buf:82131] [err:<nil>]
+	//test: Do() -> [resp:504] [status:Timeout [err:Get "https://www.google.com/search?q=golang": context deadline exceeded]]
 
 }

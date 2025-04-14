@@ -7,7 +7,6 @@ import (
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/iox"
 	"github.com/behavioral-ai/core/messaging"
-	"github.com/behavioral-ai/core/rest"
 	"github.com/behavioral-ai/intermediary/config"
 	"github.com/behavioral-ai/intermediary/routing"
 	"net/http"
@@ -15,8 +14,7 @@ import (
 )
 
 func _ExampleSearchExchange() {
-	agent := exchange.Agent(routing.NamespaceName) //routing.New(eventtest.New())
-	//agent.Message(messaging.NewEventingHandlerMessage(eventtest.New()))
+	agent := exchange.Agent(routing.NamespaceName)
 
 	// configure exchange and host name
 	agent.Message(httpx.NewConfigExchangeMessage(searchExchange))
@@ -24,15 +22,17 @@ func _ExampleSearchExchange() {
 	cfg[config.AppHostKey] = "localhost:8080"
 	agent.Message(messaging.NewConfigMapMessage(cfg))
 
+	// create request
 	url := "https://localhost:8081/search?q=golang"
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
 	req.Header = make(http.Header)
-	httpx.AddRequestId(req)
 
-	chain := rest.BuildChain(agent)
+	// create endpoint and server http
+	e := host.NewEndpoint(agent)
 	r := httptest.NewRecorder()
-	host.Exchange(r, req, chain)
+	e.ServeHTTP(r, req)
 	r.Flush()
+
 	// decoding when read all
 	buf, err := iox.ReadAll(r.Result().Body, r.Result().Header)
 	if err != nil {
@@ -41,8 +41,9 @@ func _ExampleSearchExchange() {
 	fmt.Printf("test: RoutingAgent [status:%v ] [encoding:%v] [buff:%v]\n", r.Result().StatusCode, r.Result().Header.Get(iox.ContentEncoding), len(buf))
 
 	r = httptest.NewRecorder()
-	host.Exchange(r, req, chain)
+	e.ServeHTTP(r, req)
 	r.Flush()
+
 	// not decoding when read all
 	buf, err = iox.ReadAll(r.Result().Body, nil)
 	if err != nil {
@@ -57,37 +58,34 @@ func _ExampleSearchExchange() {
 }
 
 func ExampleEchoExchange() {
-	//agent := routing.New(eventtest.New())
 	agent := exchange.Agent(routing.NamespaceName)
-	//agent.Message(messaging.NewEventingHandlerMessage(eventtest.New()))
-	//exchange.Message(messaging.NewEventingHandlerMessage(eventtest.New()).SetTo(routing.NamespaceName))
 
 	// configure exchange and host name
 	agent.Message(httpx.NewConfigExchangeMessage(EchoExchange))
-	exchange.Message(httpx.NewConfigExchangeMessage(EchoExchange).SetTo(routing.NamespaceName))
-
 	cfg := make(map[string]string)
 	cfg[config.AppHostKey] = "localhost:8080"
 	agent.Message(messaging.NewConfigMapMessage(cfg))
-	//exchange.Message(messaging.NewConfigMapMessage(cfg).SetTo(routing.NamespaceName))
 
+	// create request
 	url := "https://localhost:8081/search?q=golang"
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
 	req.Header = make(http.Header)
-	httpx.AddRequestId(req)
 
-	chain := rest.BuildChain(exchange.Agent(routing.NamespaceName))
+	// create endpoint and run
+	e := host.NewEndpoint(agent)
 	r := httptest.NewRecorder()
-	host.Exchange(r, req, chain)
+	e.ServeHTTP(r, req)
 	r.Flush()
+
 	// decoding when read all
 	buf, err := iox.ReadAll(r.Result().Body, r.Result().Header)
 	fmt.Printf("test: iox.ReadAll() -> [buf:%v] [content-type:%v] [err:%v]\n", len(buf), http.DetectContentType(buf), err)
 	fmt.Printf("test: RoutingAgent [status:%v ] [encoding:%v] [%v]\n", r.Result().StatusCode, r.Result().Header.Get(iox.ContentEncoding), string(buf))
 
 	r = httptest.NewRecorder()
-	host.Exchange(r, req, chain)
+	e.ServeHTTP(r, req)
 	r.Flush()
+
 	// not decoding when read all
 	buf, err = iox.ReadAll(r.Result().Body, nil)
 	fmt.Printf("test: iox.ReadAll() -> [buf:%v] [content-type:%v] [err:%v]\n", len(buf), http.DetectContentType(buf), err)

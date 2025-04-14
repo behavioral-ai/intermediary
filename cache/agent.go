@@ -96,10 +96,10 @@ func (a *agentT) run() {
 }
 
 // Log - implementation for Requester interface
-func (a *agentT) Log() bool               { return true }
-func (a *agentT) Route() string           { return Route }
-func (a *agentT) Timeout() time.Duration  { return a.timeout }
-func (a *agentT) Exchange() rest.Exchange { return a.exchange }
+func (a *agentT) Log() bool              { return true }
+func (a *agentT) Route() string          { return Route }
+func (a *agentT) Timeout() time.Duration { return a.timeout }
+func (a *agentT) Do() rest.Exchange      { return a.exchange }
 
 // Link - chainable exchange
 func (a *agentT) Link(next rest.Exchange) rest.Exchange {
@@ -122,9 +122,6 @@ func (a *agentT) Link(next rest.Exchange) rest.Exchange {
 			if status.Err != nil {
 				a.handler.Notify(status.WithAgent(a.Uri()))
 			}
-		}
-		if next == nil {
-			return noContentResponse, nil
 		}
 		resp, err = next(r)
 		if cacheable && resp.StatusCode == http.StatusOK {

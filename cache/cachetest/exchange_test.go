@@ -7,7 +7,6 @@ import (
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/iox"
 	"github.com/behavioral-ai/core/messaging"
-	"github.com/behavioral-ai/core/rest"
 	"github.com/behavioral-ai/intermediary/cache"
 	"github.com/behavioral-ai/intermediary/config"
 	"net/http"
@@ -24,14 +23,16 @@ func ExampleExchange() {
 	cfg[config.CacheHostKey] = "localhost:8082"
 	agent.Message(messaging.NewConfigMapMessage(cfg))
 
+	// create request
 	url := "https://localhost:8081/search?q=golang"
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
 	req.Header = make(http.Header)
 	httpx.AddRequestId(req)
 
-	chain := rest.BuildChain(agent, NextExchange)
+	// create endpoint and server Http
+	e := host.NewEndpoint(agent, NextExchange)
 	r := httptest.NewRecorder()
-	host.Exchange(r, req, chain)
+	e.ServeHTTP(r, req)
 	r.Flush()
 	buf, err := iox.ReadAll(r.Result().Body, r.Result().Header)
 	if err != nil {
@@ -40,7 +41,7 @@ func ExampleExchange() {
 	fmt.Printf("test: CacheAgent [status:%v ] [encoding:%v] [buff:%v]\n", r.Result().StatusCode, r.Result().Header.Get(iox.ContentEncoding), len(buf))
 
 	r = httptest.NewRecorder()
-	host.Exchange(r, req, chain)
+	e.ServeHTTP(r, req)
 	r.Flush()
 	buf, err = iox.ReadAll(r.Result().Body, nil)
 	if err != nil {

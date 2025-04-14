@@ -65,35 +65,33 @@ func (a *agentT) Message(m *messaging.Message) {
 }
 
 // Log - implementation for Requester interface
-func (a *agentT) Log() bool               { return a.log }
-func (a *agentT) Route() string           { return Route }
-func (a *agentT) Timeout() time.Duration  { return a.timeout }
-func (a *agentT) Exchange() rest.Exchange { return a.exchange }
+func (a *agentT) Log() bool              { return a.log }
+func (a *agentT) Route() string          { return Route }
+func (a *agentT) Timeout() time.Duration { return a.timeout }
+func (a *agentT) Do() rest.Exchange      { return a.exchange }
 
-// Link - implementation for rest.Chainable interface
-func (a *agentT) Link(next rest.Exchange) rest.Exchange {
-	return func(r *http.Request) (resp *http.Response, err error) {
-		if a.hostName == "" {
-			status := messaging.NewStatusError(messaging.StatusInvalidArgument, errors.New("host configuration is empty"), a.Uri())
-			a.handler.Notify(status)
-			return serverErrorResponse, status.Err
-		}
-		var status *messaging.Status
-
-		url := uri.BuildURL(a.hostName, r.URL.Path, r.URL.Query())
-		// TODO : need to check and remove Caching header.
-		resp, status = request.Do(a, r.Method, url, httpx.CloneHeaderWithEncoding(r), r.Body)
-		if status.Err != nil {
-			a.handler.Notify(status.WithAgent(a.Uri()))
-		}
-		if resp.StatusCode == http.StatusGatewayTimeout {
-			if resp.Header == nil {
-				resp.Header = make(http.Header)
-			}
-			resp.Header.Add(access.XTimeout, fmt.Sprintf("%v", a.timeout))
-		}
-		return resp, status.Err
+// Exchange - implementation for rest.Exchangeable interface
+func (a *agentT) Exchange(r *http.Request) (resp *http.Response, err error) {
+	if a.hostName == "" {
+		status := messaging.NewStatusError(messaging.StatusInvalidArgument, errors.New("host configuration is empty"), a.Uri())
+		a.handler.Notify(status)
+		return serverErrorResponse, status.Err
 	}
+	var status *messaging.Status
+
+	url := uri.BuildURL(a.hostName, r.URL.Path, r.URL.Query())
+	// TODO : need to check and remove Caching header.
+	resp, status = request.Do(a, r.Method, url, httpx.CloneHeaderWithEncoding(r), r.Body)
+	if status.Err != nil {
+		a.handler.Notify(status.WithAgent(a.Uri()))
+	}
+	if resp.StatusCode == http.StatusGatewayTimeout {
+		if resp.Header == nil {
+			resp.Header = make(http.Header)
+		}
+		resp.Header.Add(access.XTimeout, fmt.Sprintf("%v", a.timeout))
+	}
+	return resp, status.Err
 }
 
 func (a *agentT) configure(m *messaging.Message) {

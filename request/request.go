@@ -18,7 +18,7 @@ type Requester interface {
 	Route() string
 	Log() bool
 	Timeout() time.Duration
-	Exchange() rest.Exchange
+	Do() rest.Exchange
 }
 
 func Do(agent Requester, method string, url string, h http.Header, r io.ReadCloser) (resp *http.Response, status *messaging.Status) {
@@ -28,7 +28,7 @@ func Do(agent Requester, method string, url string, h http.Header, r io.ReadClos
 		return serverErrorResponse, messaging.NewStatusError(messaging.StatusInvalidArgument, err, "")
 	}
 	req.Header = h
-	resp, err = httpx.ExchangeWithTimeout(agent.Timeout(), agent.Exchange())(req)
+	resp, err = httpx.ExchangeWithTimeout(agent.Timeout(), agent.Do())(req)
 	if err != nil {
 		status = messaging.NewStatusError(resp.StatusCode, err, "")
 		return
