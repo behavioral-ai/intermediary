@@ -29,6 +29,9 @@ func Do(agent Requester, method string, url string, h http.Header, r io.ReadClos
 	}
 	req.Header = h
 	resp, err = httpx.ExchangeWithTimeout(agent.Timeout(), agent.Do())(req)
+	if resp.Header == nil {
+		resp.Header = make(http.Header)
+	}
 	if err != nil {
 		status = messaging.NewStatusError(resp.StatusCode, err, "")
 		return

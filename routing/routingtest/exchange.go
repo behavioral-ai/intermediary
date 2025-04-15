@@ -2,48 +2,11 @@ package routingtest
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/iox"
 	"net/http"
-	"strings"
 )
-
-const (
-	googlePath = "/google/search"
-	yahooPath  = "/yahoo/search"
-)
-
-// SearchExchange - HTTP exchange function
-func searchExchange(r *http.Request) (resp *http.Response, err error) {
-	ctx := context.Background()
-	uri := ""
-	values := r.URL.Query()
-	q := values.Encode()
-	if strings.HasPrefix(r.URL.Path, googlePath) {
-		uri = "https://www.google.com/search?" + q
-	} else {
-		if strings.HasPrefix(r.URL.Path, yahooPath) {
-			uri = "https://search.yahoo.com/search?" + q
-		} else {
-			return httpx.NewResponse(http.StatusBadRequest, nil, nil), err
-		}
-	}
-	h := make(http.Header)
-	h.Add(iox.AcceptEncoding, iox.GzipEncoding)
-	if r.Context() != nil {
-		ctx = r.Context()
-	}
-	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
-	req.Header = h
-	resp, err = httpx.Do(req)
-	if err != nil {
-		fmt.Printf("test: httx.Do() -> [err:%v]\n", err)
-	}
-	return
-}
 
 type echo struct {
 	Method string      `json:"method"`
@@ -52,8 +15,8 @@ type echo struct {
 	Header http.Header `json:"header"`
 }
 
-// EchoExchange - HTTP exchange function
-func EchoExchange(r *http.Request) (resp *http.Response, err error) {
+// Exchange - HTTP exchange function
+func Exchange(r *http.Request) (resp *http.Response, err error) {
 	e := echo{
 		Method: r.Method,
 		Host:   r.Host,

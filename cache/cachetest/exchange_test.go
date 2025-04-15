@@ -13,9 +13,20 @@ import (
 	"net/http/httptest"
 )
 
+func nextExchange(r *http.Request) (resp *http.Response, err error) {
+	h := make(http.Header)
+	h.Add(iox.AcceptEncoding, iox.GzipEncoding)
+	req, _ := http.NewRequest(http.MethodGet, "https://www.google.com/search?q=golang", nil)
+	req.Header = h
+	resp, err = httpx.Do(req)
+	if err != nil {
+		fmt.Printf("test: httx.Do() -> [err:%v]\n", err)
+	}
+	return
+}
+
 func ExampleExchange() {
 	agent := exchange.Agent(cache.NamespaceName)
-	//agent.Message(messaging.NewEventingHandlerMessage(eventtest.New()))
 
 	// configure exchange and host name
 	agent.Message(httpx.NewConfigExchangeMessage(Exchange))
@@ -30,7 +41,7 @@ func ExampleExchange() {
 	httpx.AddRequestId(req)
 
 	// create endpoint and server Http
-	e := host.NewEndpoint(agent, NextExchange)
+	e := host.NewEndpoint(agent, nextExchange)
 	r := httptest.NewRecorder()
 	e.ServeHTTP(r, req)
 	r.Flush()
