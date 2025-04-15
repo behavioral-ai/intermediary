@@ -47,7 +47,7 @@ func newAgent(handler eventing.Agent) *agentT {
 	a.defaultRoute.Name = urn.DefaultRoute
 	a.defaultRoute.Ex = httpx.Do
 	a.router = rest.NewRouter()
-	a.router.Modify(urn.DefaultRoute, "", httpx.Do)
+	a.routerModify("", httpx.Do)
 
 	a.handler = handler
 	return a
@@ -82,8 +82,8 @@ func (a *agentT) Do() rest.Exchange {
 
 // Exchange - implementation for rest.Exchangeable interface
 func (a *agentT) Exchange(r *http.Request) (resp *http.Response, err error) {
-	rt, ok := a.router.Lookup(urn.DefaultRoute)
-	if ok && rt.Uri == "" {
+	rt := a.routerLookup()
+	if rt != nil && rt.Uri == "" {
 		status := messaging.NewStatusError(messaging.StatusInvalidArgument, errors.New("host configuration is empty"), a.Uri())
 		a.handler.Notify(status)
 		return serverErrorResponse, status.Err
@@ -109,9 +109,7 @@ func (a *agentT) configure(m *messaging.Message) {
 	switch m.ContentType() {
 	case httpx.ContentTypeExchange:
 		if ex, ok := httpx.ConfigExchangeContent(m); ok {
-			if rt, ok1 := a.router.Lookup(urn.DefaultRoute); ok1 {
-				a.router.Modify(rt.Name, "", ex)
-			}
+			a.routerModify("", ex)
 		}
 	case messaging.ContentTypeMap:
 		var (
@@ -122,13 +120,19 @@ func (a *agentT) configure(m *messaging.Message) {
 		if !ok {
 			return
 		}
-		if rt, ok1 := a.router.Lookup(urn.DefaultRoute); ok1 {
-			a.router.Modify(rt.Name, hostName, nil)
-			return
-		}
+		a.routerModify(hostName, nil)
 		if a.timeout, ok = config.Timeout(a, m); !ok {
 			return
 		}
 	}
 	messaging.Reply(m, messaging.StatusOK(), a.Uri())
+}
+
+func (a *agentT) routerModify(uri string, ex rest.Exchange) {
+	a.router.Modify(urn.DefaultRoute, uri, ex)
+}
+
+func (a *agentT) routerLookup() (r *rest.Route) {
+	r, _ = a.router.Lookup(urn.DefaultRoute)
+	return
 }

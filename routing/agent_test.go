@@ -39,7 +39,7 @@ func ExampleExchange() {
 	resp, err := ex(req)
 	fmt.Printf("test: Exchange() -> [resp:%v] [err:%v]\n", resp.StatusCode, err)
 
-	rt, _ := a.router.Lookup(urn.DefaultRoute)
+	rt := a.routerLookup()
 	rt.Uri = "www.google.com"
 	req, _ = http.NewRequest(http.MethodGet, url, nil)
 	req.Header.Add(httpx.XRequestId, "1234-request-id")
