@@ -12,6 +12,7 @@ import (
 	"github.com/behavioral-ai/core/uri"
 	"github.com/behavioral-ai/intermediary/config"
 	"github.com/behavioral-ai/intermediary/request"
+	"github.com/behavioral-ai/intermediary/urn"
 	"net/http"
 	"time"
 )
@@ -26,12 +27,12 @@ var (
 )
 
 type agentT struct {
-	log      bool
-	hostName string
-	timeout  time.Duration
+	log          bool
+	timeout      time.Duration
+	router       *rest.Router
+	defaultRoute rest.Route
 
-	exchange rest.Exchange
-	handler  eventing.Agent
+	handler eventing.Agent
 }
 
 // New - create a new cache agent
@@ -43,7 +44,10 @@ func init() {
 func newAgent(handler eventing.Agent) *agentT {
 	a := new(agentT)
 	a.log = true
-	a.exchange = httpx.Do
+	a.defaultRoute.Name = urn.DefaultRoute
+	a.defaultRoute.Ex = httpx.Do
+	a.router = rest.NewRouter()
+
 	a.handler = handler
 	return a
 }
@@ -68,18 +72,24 @@ func (a *agentT) Message(m *messaging.Message) {
 func (a *agentT) Log() bool              { return a.log }
 func (a *agentT) Route() string          { return Route }
 func (a *agentT) Timeout() time.Duration { return a.timeout }
-func (a *agentT) Do() rest.Exchange      { return a.exchange }
+func (a *agentT) Do() rest.Exchange {
+	if rt, ok := a.router.Lookup(urn.DefaultRoute); ok {
+		return rt.Ex
+	}
+	return httpx.Do
+}
 
 // Exchange - implementation for rest.Exchangeable interface
 func (a *agentT) Exchange(r *http.Request) (resp *http.Response, err error) {
-	if a.hostName == "" {
+	rt, ok := a.router.Lookup(urn.DefaultRoute)
+	if ok && rt.Uri == "" {
 		status := messaging.NewStatusError(messaging.StatusInvalidArgument, errors.New("host configuration is empty"), a.Uri())
 		a.handler.Notify(status)
 		return serverErrorResponse, status.Err
 	}
 	var status *messaging.Status
 
-	url := uri.BuildURL(a.hostName, r.URL.Path, r.URL.Query())
+	url := uri.BuildURL(rt.Uri, r.URL.Path, r.URL.Query())
 	// TODO : need to check and remove Caching header.
 	resp, status = request.Do(a, r.Method, url, httpx.CloneHeaderWithEncoding(r), r.Body)
 	if status.Err != nil {
@@ -98,11 +108,21 @@ func (a *agentT) configure(m *messaging.Message) {
 	switch m.ContentType() {
 	case httpx.ContentTypeExchange:
 		if ex, ok := httpx.ConfigExchangeContent(m); ok {
-			a.exchange = ex
+			if rt, ok1 := a.router.Lookup(urn.DefaultRoute); ok1 {
+				a.router.Modify(rt.Name, "", ex)
+			}
 		}
 	case messaging.ContentTypeMap:
-		var ok bool
-		if a.hostName, ok = config.AppHostName(a, m); !ok {
+		var (
+			ok       bool
+			hostName string
+		)
+		hostName, ok = config.AppHostName(a, m)
+		if !ok {
+			return
+		}
+		if rt, ok1 := a.router.Lookup(urn.DefaultRoute); ok1 {
+			a.router.Modify(rt.Name, hostName, nil)
 			return
 		}
 		if a.timeout, ok = config.Timeout(a, m); !ok {
