@@ -6,6 +6,7 @@ import (
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/messaging"
 	"github.com/behavioral-ai/intermediary/config"
+	"github.com/behavioral-ai/intermediary/urn"
 	"net/http"
 	"time"
 )
@@ -19,11 +20,12 @@ func ExampleNew() {
 	m[config.AppHostKey] = "google.com"
 	a.Message(messaging.NewConfigMapMessage(m))
 	time.Sleep(time.Second * 2)
-	fmt.Printf("test: Message() -> %v\n", a.hostName)
+	rt, ok := a.router.Lookup(urn.DefaultRoute)
+	fmt.Printf("test: Message() -> [name:%v] [uri:%v] [ok:%v]\n", rt.Name, rt.Uri, ok)
 
 	//Output:
 	//test: newAgent() -> resiliency:agent/behavioral-ai/intermediary/routing
-	//test: Message() -> google.com
+	//test: Message() -> [name:routing:default] [uri:google.com] [ok:true]
 
 }
 
@@ -37,7 +39,8 @@ func ExampleExchange() {
 	resp, err := ex(req)
 	fmt.Printf("test: Exchange() -> [resp:%v] [err:%v]\n", resp.StatusCode, err)
 
-	a.hostName = "www.google.com"
+	rt, _ := a.router.Lookup(urn.DefaultRoute)
+	rt.Uri = "www.google.com"
 	req, _ = http.NewRequest(http.MethodGet, url, nil)
 	req.Header.Add(httpx.XRequestId, "1234-request-id")
 	resp, err = ex(req)

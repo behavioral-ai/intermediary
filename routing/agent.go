@@ -47,6 +47,7 @@ func newAgent(handler eventing.Agent) *agentT {
 	a.defaultRoute.Name = urn.DefaultRoute
 	a.defaultRoute.Ex = httpx.Do
 	a.router = rest.NewRouter()
+	a.router.Modify(urn.DefaultRoute, "", httpx.Do)
 
 	a.handler = handler
 	return a
