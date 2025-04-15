@@ -5,7 +5,7 @@ go 1.23.0
 //toolchain go1.23.7
 
 require (
-	github.com/behavioral-ai/collective v0.0.0-20250414150052-469aea45b2ba
+	github.com/behavioral-ai/collective v0.0.0-20250415162238-6782057a4fd9
 	github.com/behavioral-ai/core v0.0.0-20250415134406-927770e5d6f7
 )
 
