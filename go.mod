@@ -6,7 +6,7 @@ go 1.23.0
 
 require (
 	github.com/behavioral-ai/collective v0.0.0-20250415162238-6782057a4fd9
-	github.com/behavioral-ai/core v0.0.0-20250416124259-53c9ab9c3e87
+	github.com/behavioral-ai/core v0.0.0-20250416131557-fa83e7a150e1
 )
 
 require github.com/google/uuid v1.6.0 // indirect

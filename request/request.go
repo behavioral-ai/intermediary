@@ -38,7 +38,7 @@ func Do(agent Requester, method string, url string, h http.Header, r io.ReadClos
 	}
 	status = messaging.StatusOK()
 	if agent.Log() {
-		access.Log(nil, access.EgressTraffic, start, time.Since(start), agent.Route(), req, resp, access.Threshold{Timeout: agent.Timeout()})
+		access.Log(access.EgressTraffic, start, time.Since(start), agent.Route(), req, resp, access.Threshold{Timeout: agent.Timeout()})
 	}
 	return
 }
