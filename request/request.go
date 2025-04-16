@@ -1,7 +1,7 @@
 package request
 
 import (
-	"github.com/behavioral-ai/core/access"
+	access "github.com/behavioral-ai/core/access2"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/messaging"
 	"github.com/behavioral-ai/core/rest"
@@ -38,7 +38,7 @@ func Do(agent Requester, method string, url string, h http.Header, r io.ReadClos
 	}
 	status = messaging.StatusOK()
 	if agent.Log() {
-		access.Log(access.EgressTraffic, start, time.Since(start), agent.Route(), req, resp, access.Threshold{Timeout: agent.Timeout()})
+		access.Log(nil, access.EgressTraffic, start, time.Since(start), agent.Route(), req, resp, access.Threshold{Timeout: agent.Timeout()})
 	}
 	return
 }
