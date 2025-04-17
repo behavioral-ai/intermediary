@@ -97,9 +97,6 @@ func (a *agentT) Exchange(r *http.Request) (resp *http.Response, err error) {
 		a.handler.Notify(status.WithAgent(a.Uri()))
 	}
 	if resp.StatusCode == http.StatusGatewayTimeout {
-		if resp.Header == nil {
-			resp.Header = make(http.Header)
-		}
 		resp.Header.Add(access.XTimeout, fmt.Sprintf("%v", a.timeout))
 	}
 	return resp, status.Err

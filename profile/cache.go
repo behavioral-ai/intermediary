@@ -24,19 +24,3 @@ func (c Cache) Now() bool {
 	hour := ts.Hour()
 	return c.Week[day][hour]
 }
-
-/*
-func NewTraffic(curr *Traffic, resolver *content.Resolution) *Traffic {
-	p, status := content.Resolve[Traffic](trafficName, 1, resolver)
-	if !status.OK() {
-		agent.Message(messaging.NewStatusMessage(status, ""))
-		if curr == nil {
-			curr = &Traffic{}
-		}
-		return curr
-	}
-	return &p
-}
-
-
-*/

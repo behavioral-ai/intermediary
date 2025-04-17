@@ -12,7 +12,7 @@ func emissaryAttend(agent *agentT) {
 		select {
 		case <-agent.ticker.C():
 			if !paused {
-				agent.enabled.Store(agent.profile.Now())
+				agent.enabled.Store(true) //agent.profile.Now())
 			}
 		default:
 		}
