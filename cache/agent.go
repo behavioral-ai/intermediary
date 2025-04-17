@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"github.com/behavioral-ai/collective/eventing"
 	"github.com/behavioral-ai/collective/exchange"
-	"github.com/behavioral-ai/core/access"
+	"github.com/behavioral-ai/core/access2"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/messaging"
 	"github.com/behavioral-ai/core/rest"
@@ -118,10 +118,10 @@ func (a *agentT) Link(next rest.Exchange) rest.Exchange {
 		h.Add(httpx.XRequestId, r.Header.Get(httpx.XRequestId))
 		resp, status = request.Do(a, http.MethodGet, url, h, nil)
 		if resp.StatusCode == http.StatusOK {
-			resp.Header.Add(access.XCached, "true")
+			resp.Header.Add(access2.XCached, "true")
 			return resp, nil
 		}
-		resp.Header.Add(access.XCached, "false")
+		resp.Header.Add(access2.XCached, "false")
 		if status.Err != nil {
 			a.handler.Notify(status.WithAgent(a.Uri()))
 		}

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/behavioral-ai/collective/eventing"
 	"github.com/behavioral-ai/collective/exchange"
-	"github.com/behavioral-ai/core/access"
+	"github.com/behavioral-ai/core/access2"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/messaging"
 	"github.com/behavioral-ai/core/rest"
@@ -97,7 +97,7 @@ func (a *agentT) Exchange(r *http.Request) (resp *http.Response, err error) {
 		a.handler.Notify(status.WithAgent(a.Uri()))
 	}
 	if resp.StatusCode == http.StatusGatewayTimeout {
-		resp.Header.Add(access.XTimeout, fmt.Sprintf("%v", a.timeout))
+		resp.Header.Add(access2.XTimeout, fmt.Sprintf("%v", a.timeout))
 	}
 	return resp, status.Err
 }
