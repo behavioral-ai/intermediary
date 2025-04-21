@@ -1,8 +1,8 @@
 package urn
 
 const (
-	CacheAgent   = "resiliency:agent/behavioral-ai/intermediary/cache"
-	RoutingAgent = "resiliency:agent/behavioral-ai/intermediary/routing"
+	CacheAgent   = "behavioral-ai.github.com:resiliency:agent/intermediary/cache"
+	RoutingAgent = "behavioral-ai.github.com:resiliency:agent/intermediary/routing"
 
 	DefaultRoute = "routing:default"
 )

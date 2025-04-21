@@ -24,7 +24,7 @@ func ExampleNew() {
 	fmt.Printf("test: Message() -> [name:%v] [uri:%v] [ok:%v]\n", rt.Name, rt.Uri, ok)
 
 	//Output:
-	//test: newAgent() -> resiliency:agent/behavioral-ai/intermediary/routing
+	//test: newAgent() -> behavioral-ai.github.com:resiliency:agent/intermediary/routing
 	//test: Message() -> [name:routing:default] [uri:google.com] [ok:true]
 
 }

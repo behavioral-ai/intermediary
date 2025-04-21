@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	NamespaceName = "resiliency:agent/behavioral-ai/intermediary/routing"
+	NamespaceName = "behavioral-ai.github.com:resiliency:agent/intermediary/routing"
 	Route         = "app"
 )
 
