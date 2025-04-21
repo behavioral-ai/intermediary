@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	NamespaceName  = "behavioral-ai.github.com:resiliency:agent/intermediary/cache"
+	NamespaceName  = "unn:behavioral-ai.github.com:resiliency:agent/intermediary/cache"
 	Route          = "cache"
 	defaultTimeout = time.Millisecond * 3000
 )
