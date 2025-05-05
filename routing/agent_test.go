@@ -2,7 +2,7 @@ package routing
 
 import (
 	"fmt"
-	"github.com/behavioral-ai/collective/eventing/eventtest"
+	"github.com/behavioral-ai/core/eventing/eventtest"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/messaging"
 	"github.com/behavioral-ai/intermediary/config"

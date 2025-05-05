@@ -3,9 +3,9 @@ package routing
 import (
 	"errors"
 	"fmt"
-	"github.com/behavioral-ai/collective/eventing"
-	"github.com/behavioral-ai/collective/exchange"
 	"github.com/behavioral-ai/core/access2"
+	"github.com/behavioral-ai/core/eventing"
+	"github.com/behavioral-ai/core/host"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/messaging"
 	"github.com/behavioral-ai/core/rest"
@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	NamespaceName = "unn:behavioral-ai.github.com:resiliency:agent/intermediary/routing"
+	NamespaceName = "resiliency:agent/intermediary/routing"
 	Route         = "app"
 )
 
@@ -38,7 +38,7 @@ type agentT struct {
 // New - create a new cache agent
 func init() {
 	a := newAgent(eventing.Handler)
-	exchange.Register(a)
+	host.Register(a)
 }
 
 func newAgent(handler eventing.Agent) *agentT {

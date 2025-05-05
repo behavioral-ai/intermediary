@@ -2,7 +2,6 @@ package routingtest
 
 import (
 	"fmt"
-	"github.com/behavioral-ai/collective/exchange"
 	"github.com/behavioral-ai/core/host"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/iox"
@@ -14,7 +13,7 @@ import (
 )
 
 func ExampleExchange() {
-	agent := exchange.Agent(routing.NamespaceName)
+	agent := host.Agent(routing.NamespaceName)
 
 	// configure exchange and host name
 	agent.Message(httpx.NewConfigExchangeMessage(Exchange))
