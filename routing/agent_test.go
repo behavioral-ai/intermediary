@@ -24,7 +24,7 @@ func ExampleNew() {
 	fmt.Printf("test: Message() -> [name:%v] [uri:%v] [ok:%v]\n", rt.Name, rt.Uri, ok)
 
 	//Output:
-	//test: newAgent() -> unn:behavioral-ai.github.com:resiliency:agent/intermediary/routing
+	//test: newAgent() -> resiliency:agent/request/routing
 	//test: Message() -> [name:routing:default] [uri:google.com] [ok:true]
 
 }
@@ -47,7 +47,7 @@ func ExampleExchange() {
 	fmt.Printf("test: Exchange() -> [resp:%v] [err:%v]\n", resp.StatusCode, err)
 
 	//Output:
-	//notify-> 2025-03-25T14:44:49.521Z [resiliency:agent/behavioral-ai/resiliency/routing] [core:messaging.status] [] [Invalid Argument] [host configuration is empty]
+	//notify-> 2025-03-25T14:44:49.521Z [resiliency:agent/request/routing] [core:messaging.status] [] [Invalid Argument] [host configuration is empty]
 	//test: Exchange() -> [resp:500] [err:host configuration is empty]
 	//test: Exchange() -> [resp:200] [err:<nil>]
 

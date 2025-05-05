@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	NamespaceName  = "resiliency:agent/intermediary/cache"
+	NamespaceName  = "resiliency:agent/request/cache"
 	Route          = "cache"
 	defaultTimeout = time.Millisecond * 3000
 )

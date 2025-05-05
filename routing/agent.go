@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	NamespaceName = "resiliency:agent/intermediary/routing"
+	NamespaceName = "resiliency:agent/request/routing"
 	Route         = "app"
 )
 
