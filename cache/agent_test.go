@@ -22,7 +22,7 @@ func ExampleNew() {
 	fmt.Printf("test: Message() -> %v\n", a.hostName)
 
 	//Output:
-	//test: newAgent() -> resiliency:agent/request/cache
+	//test: newAgent() -> resiliency:agent/cache/request/http
 	//test: Message() -> google.com
 
 }

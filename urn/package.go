@@ -1,8 +1,8 @@
 package urn
 
 const (
-	CacheAgent   = "resiliency:agent/request/cache"
-	RoutingAgent = "resiliency:agent/request/routing"
+	CacheAgent   = "resiliency:agent/cache/request/http"
+	RoutingAgent = "resiliency:agent/routing/request/http"
 
 	DefaultRoute = "routing:default"
 )

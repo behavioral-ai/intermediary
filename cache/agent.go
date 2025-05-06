@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	NamespaceName  = "resiliency:agent/request/cache"
+	NamespaceName  = "resiliency:agent/cache/request/http"
 	Route          = "cache"
 	defaultTimeout = time.Millisecond * 3000
 )
