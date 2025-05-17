@@ -25,7 +25,7 @@ func Do(agent Requester, method string, url string, h http.Header, r io.ReadClos
 	start := time.Now().UTC()
 	req, err := http.NewRequest(method, url, r)
 	if err != nil {
-		return serverErrorResponse, messaging.NewStatusError(messaging.StatusInvalidArgument, err, "")
+		return serverErrorResponse, messaging.NewStatus(messaging.StatusInvalidArgument, err)
 	}
 	req.Header = h
 	resp, err = httpx.ExchangeWithTimeout(agent.Timeout(), agent.Do())(req)
@@ -33,7 +33,7 @@ func Do(agent Requester, method string, url string, h http.Header, r io.ReadClos
 		resp.Header = make(http.Header)
 	}
 	if err != nil {
-		status = messaging.NewStatusError(resp.StatusCode, err, "")
+		status = messaging.NewStatus(resp.StatusCode, err)
 		return
 	}
 	status = messaging.StatusOK()

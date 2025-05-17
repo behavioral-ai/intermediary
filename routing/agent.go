@@ -3,9 +3,9 @@ package routing
 import (
 	"errors"
 	"fmt"
+	"github.com/behavioral-ai/collective/repository"
 	"github.com/behavioral-ai/core/access2"
 	"github.com/behavioral-ai/core/eventing"
-	"github.com/behavioral-ai/core/host"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/messaging"
 	"github.com/behavioral-ai/core/rest"
@@ -37,8 +37,9 @@ type agentT struct {
 
 // New - create a new cache agent
 func init() {
-	a := newAgent(eventing.Handler)
-	host.Register(a)
+	repository.RegisterConstructor(NamespaceName, func() messaging.Agent {
+		return newAgent(eventing.Handler)
+	})
 }
 
 func newAgent(handler eventing.Agent) *agentT {
@@ -84,7 +85,7 @@ func (a *agentT) Do() rest.Exchange {
 func (a *agentT) Exchange(r *http.Request) (resp *http.Response, err error) {
 	rt := a.routerLookup()
 	if rt != nil && rt.Uri == "" {
-		status := messaging.NewStatusError(messaging.StatusInvalidArgument, errors.New("host configuration is empty"), a.Uri())
+		status := messaging.NewStatus(messaging.StatusInvalidArgument, errors.New("host configuration is empty")).WithLocation(a.Uri())
 		a.handler.Notify(status)
 		return serverErrorResponse, status.Err
 	}
@@ -94,7 +95,7 @@ func (a *agentT) Exchange(r *http.Request) (resp *http.Response, err error) {
 	// TODO : need to check and remove Caching header.
 	resp, status = request.Do(a, r.Method, url, httpx.CloneHeaderWithEncoding(r), r.Body)
 	if status.Err != nil {
-		a.handler.Notify(status.WithAgent(a.Uri()))
+		a.handler.Notify(status.WithLocation(a.Uri()))
 	}
 	if resp.StatusCode == http.StatusGatewayTimeout {
 		resp.Header.Add(access2.XTimeout, fmt.Sprintf("%v", a.timeout))

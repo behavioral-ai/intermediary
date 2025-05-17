@@ -2,9 +2,9 @@ package cache
 
 import (
 	"bytes"
+	"github.com/behavioral-ai/collective/repository"
 	"github.com/behavioral-ai/core/access2"
 	"github.com/behavioral-ai/core/eventing"
-	"github.com/behavioral-ai/core/host"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/messaging"
 	"github.com/behavioral-ai/core/rest"
@@ -45,8 +45,9 @@ type agentT struct {
 
 // New - create a new cache agent
 func init() {
-	a := newAgent(eventing.Handler)
-	host.Register(a)
+	repository.RegisterConstructor(NamespaceName, func() messaging.Agent {
+		return newAgent(eventing.Handler)
+	})
 }
 
 func newAgent(handler eventing.Agent) *agentT {
@@ -123,7 +124,7 @@ func (a *agentT) Link(next rest.Exchange) rest.Exchange {
 		}
 		resp.Header.Add(access2.XCached, "false")
 		if status.Err != nil {
-			a.handler.Notify(status.WithAgent(a.Uri()))
+			a.handler.Notify(status.WithLocation(a.Uri()))
 		}
 		// cache miss, call next exchange
 		resp, err = next(r)
@@ -174,7 +175,7 @@ func (a *agentT) cacheUpdate(url string, r *http.Request, resp *http.Response) e
 	// TODO: Need to reset the body in the response after reading it.
 	buf, err = io.ReadAll(resp.Body)
 	if err != nil {
-		status = messaging.NewStatusError(messaging.StatusIOError, err, a.Uri())
+		status = messaging.NewStatus(messaging.StatusIOError, err).WithLocation(a.Uri())
 		a.handler.Notify(status)
 		return err
 	}
@@ -187,7 +188,7 @@ func (a *agentT) cacheUpdate(url string, r *http.Request, resp *http.Response) e
 		h2.Add(httpx.XRequestId, r.Header.Get(httpx.XRequestId))
 		_, status = request.Do(a, http.MethodPut, url, h2, io.NopCloser(bytes.NewReader(buf)))
 		if status.Err != nil {
-			a.handler.Notify(status.WithAgent(a.Uri()))
+			a.handler.Notify(status.WithLocation(a.Uri()))
 		}
 	}()
 	return nil
