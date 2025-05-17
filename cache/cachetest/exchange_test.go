@@ -2,6 +2,7 @@ package cachetest
 
 import (
 	"fmt"
+	"github.com/behavioral-ai/collective/repository"
 	"github.com/behavioral-ai/core/host"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/iox"
@@ -25,7 +26,7 @@ func nextExchange(r *http.Request) (resp *http.Response, err error) {
 }
 
 func ExampleExchange() {
-	agent := host.Agent(cache.NamespaceName)
+	agent := repository.Agent(cache.NamespaceName)
 
 	// configure exchange and host name
 	agent.Message(httpx.NewConfigExchangeMessage(Exchange))
