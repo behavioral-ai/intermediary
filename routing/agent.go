@@ -12,7 +12,6 @@ import (
 	"github.com/behavioral-ai/core/uri"
 	"github.com/behavioral-ai/intermediary/config"
 	"github.com/behavioral-ai/intermediary/request"
-	"github.com/behavioral-ai/intermediary/urn"
 	"net/http"
 	"time"
 )
@@ -20,6 +19,7 @@ import (
 const (
 	NamespaceName = "resiliency:agent/routing/request/http"
 	Route         = "app"
+	DefaultRoute  = "core:routing/default"
 )
 
 var (
@@ -45,7 +45,7 @@ func init() {
 func newAgent(handler eventing.Agent) *agentT {
 	a := new(agentT)
 	a.log = true
-	a.defaultRoute.Name = urn.DefaultRoute
+	a.defaultRoute.Name = DefaultRoute
 	a.defaultRoute.Ex = httpx.Do
 	a.router = rest.NewRouter()
 	a.routerModify("", httpx.Do)
@@ -75,7 +75,7 @@ func (a *agentT) Log() bool              { return a.log }
 func (a *agentT) Route() string          { return Route }
 func (a *agentT) Timeout() time.Duration { return a.timeout }
 func (a *agentT) Do() rest.Exchange {
-	if rt, ok := a.router.Lookup(urn.DefaultRoute); ok {
+	if rt, ok := a.router.Lookup(DefaultRoute); ok {
 		return rt.Ex
 	}
 	return httpx.Do
@@ -127,10 +127,10 @@ func (a *agentT) configure(m *messaging.Message) {
 }
 
 func (a *agentT) routerModify(uri string, ex rest.Exchange) {
-	a.router.Modify(urn.DefaultRoute, uri, ex)
+	a.router.Modify(DefaultRoute, uri, ex)
 }
 
 func (a *agentT) routerLookup() (r *rest.Route) {
-	r, _ = a.router.Lookup(urn.DefaultRoute)
+	r, _ = a.router.Lookup(DefaultRoute)
 	return
 }

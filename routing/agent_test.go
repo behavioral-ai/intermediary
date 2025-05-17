@@ -6,7 +6,6 @@ import (
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/messaging"
 	"github.com/behavioral-ai/intermediary/config"
-	"github.com/behavioral-ai/intermediary/urn"
 	"net/http"
 	"time"
 )
@@ -20,7 +19,7 @@ func ExampleNew() {
 	m[config.AppHostKey] = "google.com"
 	a.Message(messaging.NewConfigMapMessage(m))
 	time.Sleep(time.Second * 2)
-	rt, ok := a.router.Lookup(urn.DefaultRoute)
+	rt, ok := a.router.Lookup(DefaultRoute)
 	fmt.Printf("test: Message() -> [name:%v] [uri:%v] [ok:%v]\n", rt.Name, rt.Uri, ok)
 
 	//Output:
