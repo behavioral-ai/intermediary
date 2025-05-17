@@ -26,13 +26,13 @@ func nextExchange(r *http.Request) (resp *http.Response, err error) {
 }
 
 func ExampleExchange() {
-	agent := repository.Agent(cache.NamespaceName)
+	//agent := repository.Agent(cache.NamespaceName)
 
 	// configure exchange and host name
-	agent.Message(httpx.NewConfigExchangeMessage(Exchange))
+	repository.Message(httpx.NewConfigExchangeMessage(Exchange))
 	cfg := make(map[string]string)
 	cfg[config.CacheHostKey] = "localhost:8082"
-	agent.Message(messaging.NewConfigMapMessage(cfg))
+	repository.Message(messaging.NewConfigMapMessage(cfg))
 
 	// create request
 	url := "https://localhost:8081/search?q=golang"
@@ -41,7 +41,7 @@ func ExampleExchange() {
 	httpx.AddRequestId(req)
 
 	// create endpoint and server Http
-	e := host.NewEndpoint(agent, nextExchange)
+	e := host.NewEndpoint(repository.Agent(cache.NamespaceName), nextExchange)
 	r := httptest.NewRecorder()
 	e.ServeHTTP(r, req)
 	r.Flush()
