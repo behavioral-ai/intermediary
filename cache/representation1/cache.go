@@ -32,14 +32,19 @@ type Cache struct {
 func Initialize() *Cache {
 	c := new(Cache)
 	c.Policy = make(http.Header)
-	c.Policy.Add(cacheControlKey, "max-age=0")
+	//c.Policy.Add(cacheControlKey, "max-age=0")
 	c.Days = make(map[string]Range)
 	return c
 }
 
 func NewCache(name string) *Cache {
+	m := make(map[string]string)
+	return newCache(name, m)
+}
+
+func newCache(name string, m map[string]string) *Cache {
 	c := Initialize()
-	parseCache(c, nil)
+	parseCache(c, m)
 	return c
 }
 
@@ -48,7 +53,7 @@ func (c *Cache) Enabled() bool {
 }
 
 func (c *Cache) Now() bool {
-	ts := time.Now().UTC()
+	ts := time.Now()
 	day := ts.Weekday()
 	s := ""
 	switch day {
@@ -104,7 +109,7 @@ type Range struct {
 }
 
 func NewRange(s string) Range {
-	tokens := strings.Split(s, rangeSeparator)
+	tokens := strings.Split(strings.Trim(s, " "), rangeSeparator)
 	if len(tokens) != 2 {
 		return Range{}
 	}
@@ -119,7 +124,13 @@ func NewRange(s string) Range {
 }
 
 func (r Range) Empty() bool {
-	return r.From == 0 || r.To == 0
+	if r.From < 0 || r.To <= 0 {
+		return true
+	}
+	if r.From > 23 || r.To > 23 {
+		return false
+	}
+	return r.From > r.To
 }
 
 func (r Range) In(ts time.Time) bool {
