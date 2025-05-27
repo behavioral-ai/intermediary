@@ -13,7 +13,7 @@ import (
 func ExampleNew() {
 	a := newAgent(eventtest.New())
 
-	fmt.Printf("test: newAgent() -> %v\n", a.Uri())
+	fmt.Printf("test: newAgent() -> %v\n", a.Name())
 
 	m := make(map[string]string)
 	m[config.AppHostKey] = "google.com"

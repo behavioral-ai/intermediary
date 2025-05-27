@@ -55,17 +55,17 @@ func newAgent(handler eventing.Agent) *agentT {
 }
 
 // String - identity
-func (a *agentT) String() string { return a.Uri() }
+func (a *agentT) String() string { return a.Name() }
 
-// Uri - agent identifier
-func (a *agentT) Uri() string { return NamespaceName }
+// Name - agent identifier
+func (a *agentT) Name() string { return NamespaceName }
 
 // Message - message the agent
 func (a *agentT) Message(m *messaging.Message) {
 	if m == nil {
 		return
 	}
-	if m.Event() == messaging.ConfigEvent {
+	if m.Name() == messaging.ConfigEvent {
 		a.configure(m)
 	}
 }
@@ -85,7 +85,7 @@ func (a *agentT) Do() rest.Exchange {
 func (a *agentT) Exchange(r *http.Request) (resp *http.Response, err error) {
 	rt := a.routerLookup()
 	if rt != nil && rt.Uri == "" {
-		status := messaging.NewStatus(messaging.StatusInvalidArgument, errors.New("host configuration is empty")).WithLocation(a.Uri())
+		status := messaging.NewStatus(messaging.StatusInvalidArgument, errors.New("host configuration is empty")).WithLocation(a.Name())
 		a.handler.Notify(status)
 		return serverErrorResponse, status.Err
 	}
@@ -95,7 +95,7 @@ func (a *agentT) Exchange(r *http.Request) (resp *http.Response, err error) {
 	// TODO : need to check and remove Caching header.
 	resp, status = request.Do(a, r.Method, url, httpx.CloneHeaderWithEncoding(r), r.Body)
 	if status.Err != nil {
-		a.handler.Notify(status.WithLocation(a.Uri()))
+		a.handler.Notify(status.WithLocation(a.Name()))
 	}
 	if resp.StatusCode == http.StatusGatewayTimeout {
 		resp.Header.Add(access2.XTimeout, fmt.Sprintf("%v", a.timeout))
@@ -123,7 +123,7 @@ func (a *agentT) configure(m *messaging.Message) {
 			return
 		}
 	}
-	messaging.Reply(m, messaging.StatusOK(), a.Uri())
+	messaging.Reply(m, messaging.StatusOK(), a.Name())
 }
 
 func (a *agentT) routerModify(uri string, ex rest.Exchange) {

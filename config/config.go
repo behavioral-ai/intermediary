@@ -15,17 +15,17 @@ const (
 func Timeout(agent messaging.Agent, m *messaging.Message) (time.Duration, bool) {
 	cfg := messaging.ConfigMapContent(m)
 	if cfg == nil {
-		messaging.Reply(m, messaging.ConfigEmptyStatusError(agent), agent.Uri())
+		messaging.Reply(m, messaging.ConfigEmptyStatusError(agent), agent.Name())
 		return 0, false
 	}
 	timeout := cfg[TimeoutKey]
 	if timeout == "" {
-		messaging.Reply(m, messaging.ConfigContentStatusError(agent, TimeoutKey), agent.Uri())
+		messaging.Reply(m, messaging.ConfigContentStatusError(agent, TimeoutKey), agent.Name())
 		return 0, false
 	}
 	dur, err := fmtx.ParseDuration(timeout)
 	if err != nil {
-		messaging.Reply(m, messaging.ConfigContentStatusError(agent, TimeoutKey), agent.Uri())
+		messaging.Reply(m, messaging.ConfigContentStatusError(agent, TimeoutKey), agent.Name())
 		return 0, false
 	}
 	return dur, true
@@ -42,12 +42,12 @@ func CacheHostName(agent messaging.Agent, m *messaging.Message) (string, bool) {
 func hostName(agent messaging.Agent, m *messaging.Message, key string) (string, bool) {
 	cfg := messaging.ConfigMapContent(m)
 	if cfg == nil {
-		messaging.Reply(m, messaging.ConfigEmptyStatusError(agent), agent.Uri())
+		messaging.Reply(m, messaging.ConfigEmptyStatusError(agent), agent.Name())
 		return "", false
 	}
 	host := cfg[key]
 	if host == "" {
-		messaging.Reply(m, messaging.ConfigContentStatusError(agent, key), agent.Uri())
+		messaging.Reply(m, messaging.ConfigContentStatusError(agent, key), agent.Name())
 		return "", false
 	}
 	return host, true

@@ -15,7 +15,7 @@ func ExampleNew() {
 	//url := "https://www.google.com/search"
 	a := newAgent(eventtest.New())
 
-	fmt.Printf("test: newAgent() -> %v\n", a.Uri())
+	fmt.Printf("test: newAgent() -> %v\n", a.Name())
 	m := make(map[string]string)
 	m[config.CacheHostKey] = "google.com"
 	a.Message(messaging.NewConfigMapMessage(m))

@@ -1,0 +1,13 @@
+// cache host name
+host :
+// cache control
+cache-control : no-store, no-cache, max-age=0, must-revalidate, proxy-revalidate
+
+// daily schedule
+sun :
+mon : 8-4
+tue : 8-4
+wed : 8-4
+thu : 8-4
+fri : 8-4
+

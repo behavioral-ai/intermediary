@@ -64,10 +64,10 @@ func newAgent(handler eventing.Agent) *agentT {
 }
 
 // String - identity
-func (a *agentT) String() string { return a.Uri() }
+func (a *agentT) String() string { return a.Name() }
 
-// Uri - agent identifier
-func (a *agentT) Uri() string { return NamespaceName }
+// Name - agent identifier
+func (a *agentT) Name() string { return NamespaceName }
 
 // Message - message the agent
 func (a *agentT) Message(m *messaging.Message) {
@@ -75,18 +75,18 @@ func (a *agentT) Message(m *messaging.Message) {
 		return
 	}
 	if !a.running {
-		if m.Event() == messaging.ConfigEvent {
+		if m.Name() == messaging.ConfigEvent {
 			a.configure(m)
 			return
 		}
-		if m.Event() == messaging.StartupEvent {
+		if m.Name() == messaging.StartupEvent {
 			a.run()
 			a.running = true
 			return
 		}
 		return
 	}
-	if m.Event() == messaging.ShutdownEvent {
+	if m.Name() == messaging.ShutdownEvent {
 		a.running = false
 	}
 	a.emissary.C <- m
@@ -124,7 +124,7 @@ func (a *agentT) Link(next rest.Exchange) rest.Exchange {
 		}
 		resp.Header.Add(access2.XCached, "false")
 		if status.Err != nil {
-			a.handler.Notify(status.WithLocation(a.Uri()))
+			a.handler.Notify(status.WithLocation(a.Name()))
 		}
 		// cache miss, call next exchange
 		resp, err = next(r)
@@ -151,7 +151,7 @@ func (a *agentT) configure(m *messaging.Message) {
 			a.exchange = ex
 		}
 	}
-	messaging.Reply(m, messaging.StatusOK(), a.Uri())
+	messaging.Reply(m, messaging.StatusOK(), a.Name())
 }
 
 func (a *agentT) cacheable(r *http.Request) bool {
@@ -175,7 +175,7 @@ func (a *agentT) cacheUpdate(url string, r *http.Request, resp *http.Response) e
 	// TODO: Need to reset the body in the response after reading it.
 	buf, err = io.ReadAll(resp.Body)
 	if err != nil {
-		status = messaging.NewStatus(messaging.StatusIOError, err).WithLocation(a.Uri())
+		status = messaging.NewStatus(messaging.StatusIOError, err).WithLocation(a.Name())
 		a.handler.Notify(status)
 		return err
 	}
@@ -188,7 +188,7 @@ func (a *agentT) cacheUpdate(url string, r *http.Request, resp *http.Response) e
 		h2.Add(httpx.XRequestId, r.Header.Get(httpx.XRequestId))
 		_, status = request.Do(a, http.MethodPut, url, h2, io.NopCloser(bytes.NewReader(buf)))
 		if status.Err != nil {
-			a.handler.Notify(status.WithLocation(a.Uri()))
+			a.handler.Notify(status.WithLocation(a.Name()))
 		}
 	}()
 	return nil
