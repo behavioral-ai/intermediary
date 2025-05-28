@@ -10,16 +10,15 @@ import (
 	"github.com/behavioral-ai/core/messaging"
 	"github.com/behavioral-ai/core/rest"
 	"github.com/behavioral-ai/core/uri"
-	"github.com/behavioral-ai/intermediary/config"
 	"github.com/behavioral-ai/intermediary/request"
+	"github.com/behavioral-ai/intermediary/routing/representation1"
 	"net/http"
 	"time"
 )
 
 const (
 	NamespaceName = "resiliency:agent/routing/request/http"
-	Route         = "app"
-	DefaultRoute  = "core:routing/default"
+	defaultRoute  = "core:routing/default"
 )
 
 var (
@@ -27,10 +26,8 @@ var (
 )
 
 type agentT struct {
-	log          bool
-	timeout      time.Duration
-	router       *rest.Router
-	defaultRoute rest.Route
+	state  *representation1.Routing
+	router *rest.Router
 
 	handler eventing.Agent
 }
@@ -38,18 +35,23 @@ type agentT struct {
 // New - create a new cache agent
 func init() {
 	repository.RegisterConstructor(NamespaceName, func() messaging.Agent {
-		return newAgent(eventing.Handler)
+		return newAgent(eventing.Handler, representation1.NewRouting(NamespaceName))
 	})
 }
 
-func newAgent(handler eventing.Agent) *agentT {
+func newAgent(handler eventing.Agent, state *representation1.Routing) *agentT {
 	a := new(agentT)
-	a.log = true
-	a.defaultRoute.Name = DefaultRoute
-	a.defaultRoute.Ex = httpx.Do
-	a.router = rest.NewRouter()
-	a.routerModify("", httpx.Do)
+	if state == nil {
+		a.state = representation1.Initialize()
+	} else {
+		a.state = state
+	}
+	//a.defaultRoute.Name = defaultRoute
+	//a.defaultRoute.Ex = httpx.Do
+	//a.routerModify(a.state.AppHost, httpx.Do)
 
+	a.router = rest.NewRouter()
+	a.router.Modify(defaultRoute, a.state.AppHost, httpx.Do)
 	a.handler = handler
 	return a
 }
@@ -71,11 +73,11 @@ func (a *agentT) Message(m *messaging.Message) {
 }
 
 // Log - implementation for Requester interface
-func (a *agentT) Log() bool              { return a.log }
-func (a *agentT) Route() string          { return Route }
-func (a *agentT) Timeout() time.Duration { return a.timeout }
+func (a *agentT) Log() bool              { return a.state.Log }
+func (a *agentT) Route() string          { return a.state.LogRouteName }
+func (a *agentT) Timeout() time.Duration { return a.state.Timeout }
 func (a *agentT) Do() rest.Exchange {
-	if rt, ok := a.router.Lookup(DefaultRoute); ok {
+	if rt, ok := a.router.Lookup(defaultRoute); ok {
 		return rt.Ex
 	}
 	return httpx.Do
@@ -83,8 +85,8 @@ func (a *agentT) Do() rest.Exchange {
 
 // Exchange - implementation for rest.Exchangeable interface
 func (a *agentT) Exchange(r *http.Request) (resp *http.Response, err error) {
-	rt := a.routerLookup()
-	if rt != nil && rt.Uri == "" {
+	rt, ok := a.router.Lookup(defaultRoute)
+	if !ok || rt != nil && rt.Uri == "" {
 		status := messaging.NewStatus(messaging.StatusInvalidArgument, errors.New("host configuration is empty")).WithLocation(a.Name())
 		a.handler.Notify(status)
 		return serverErrorResponse, status.Err
@@ -98,7 +100,7 @@ func (a *agentT) Exchange(r *http.Request) (resp *http.Response, err error) {
 		a.handler.Notify(status.WithLocation(a.Name()))
 	}
 	if resp.StatusCode == http.StatusGatewayTimeout {
-		resp.Header.Add(access2.XTimeout, fmt.Sprintf("%v", a.timeout))
+		resp.Header.Add(access2.XTimeout, fmt.Sprintf("%v", a.state.Timeout))
 	}
 	return resp, status.Err
 }
@@ -107,30 +109,29 @@ func (a *agentT) configure(m *messaging.Message) {
 	switch m.ContentType() {
 	case httpx.ContentTypeExchange:
 		if ex, ok := httpx.ConfigExchangeContent(m); ok {
-			a.routerModify("", ex)
+			a.router.Modify(defaultRoute, a.state.AppHost, ex)
 		}
 	case messaging.ContentTypeMap:
-		var (
-			ok       bool
-			hostName string
-		)
-		hostName, ok = config.AppHostName(a, m)
-		if !ok {
+		cfg := messaging.ConfigMapContent(m)
+		if cfg == nil {
+			messaging.Reply(m, messaging.ConfigEmptyStatusError(a), a.Name())
 			return
 		}
-		a.routerModify(hostName, nil)
-		if a.timeout, ok = config.Timeout(a, m); !ok {
-			return
-		}
+		a.state.Update(cfg)
+		a.router.Modify(defaultRoute, a.state.AppHost, nil)
 	}
 	messaging.Reply(m, messaging.StatusOK(), a.Name())
 }
 
+/*
 func (a *agentT) routerModify(uri string, ex rest.Exchange) {
-	a.router.Modify(DefaultRoute, uri, ex)
+	a.router.Modify(defaultRoute, uri, ex)
 }
 
 func (a *agentT) routerLookup() (r *rest.Route) {
-	r, _ = a.router.Lookup(DefaultRoute)
+	r, _ = a.router.Lookup(defaultRoute)
 	return
 }
+
+
+*/

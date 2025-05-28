@@ -11,7 +11,7 @@ import (
 )
 
 func ExampleNew() {
-	a := newAgent(eventtest.New())
+	a := newAgent(eventtest.New(), nil)
 
 	fmt.Printf("test: newAgent() -> %v\n", a.Name())
 
@@ -19,18 +19,18 @@ func ExampleNew() {
 	m[config.AppHostKey] = "google.com"
 	a.Message(messaging.NewConfigMapMessage(m))
 	time.Sleep(time.Second * 2)
-	rt, ok := a.router.Lookup(DefaultRoute)
-	fmt.Printf("test: Message() -> [name:%v] [uri:%v] [ok:%v]\n", rt.Name, rt.Uri, ok)
+	rt, ok := a.router.Lookup(defaultRoute)
+	fmt.Printf("test: Message() -> [%v] [uri:%v] [ok:%v]\n", rt.Name, rt.Uri, ok)
 
 	//Output:
 	//test: newAgent() -> resiliency:agent/routing/request/http
-	//test: Message() -> [name:routing:default] [uri:google.com] [ok:true]
+	//test: Message() -> [core:routing/default] [uri:google.com] [ok:true]
 
 }
 
 func ExampleExchange() {
 	url := "http://localhost:8080/search?q=golang"
-	a := newAgent(eventtest.New())
+	a := newAgent(eventtest.New(), nil)
 	ex := a.Exchange
 
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
@@ -38,7 +38,7 @@ func ExampleExchange() {
 	resp, err := ex(req)
 	fmt.Printf("test: Exchange() -> [resp:%v] [err:%v]\n", resp.StatusCode, err)
 
-	rt := a.routerLookup()
+	rt, _ := a.router.Lookup(defaultRoute)
 	rt.Uri = "www.google.com"
 	req, _ = http.NewRequest(http.MethodGet, url, nil)
 	req.Header.Add(httpx.XRequestId, "1234-request-id")
