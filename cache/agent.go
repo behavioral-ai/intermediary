@@ -9,33 +9,25 @@ import (
 	"github.com/behavioral-ai/core/messaging"
 	"github.com/behavioral-ai/core/rest"
 	"github.com/behavioral-ai/core/uri"
-	"github.com/behavioral-ai/intermediary/config"
-	"github.com/behavioral-ai/intermediary/profile"
+	"github.com/behavioral-ai/intermediary/cache/representation1"
 	"github.com/behavioral-ai/intermediary/request"
 	"io"
 	"net/http"
-	"sync/atomic"
 	"time"
 )
 
 const (
-	NamespaceName  = "resiliency:agent/cache/request/http"
-	Route          = "cache"
-	defaultTimeout = time.Millisecond * 3000
+	NamespaceName = "resiliency:agent/cache/request/http"
+	Route         = "cache"
 )
 
 var (
 	noContentResponse   = httpx.NewResponse(http.StatusNoContent, nil, nil)
 	serverErrorResponse = httpx.NewResponse(http.StatusInternalServerError, nil, nil)
-	maxDuration         = time.Minute * 30
 )
 
 type agentT struct {
-	running  bool
-	enabled  *atomic.Bool
-	hostName string
-	timeout  time.Duration
-	profile  profile.Cache
+	state *representation1.Cache
 
 	exchange rest.Exchange
 	ticker   *messaging.Ticker
@@ -46,18 +38,19 @@ type agentT struct {
 // New - create a new cache agent
 func init() {
 	repository.RegisterConstructor(NamespaceName, func() messaging.Agent {
-		return newAgent(eventing.Handler)
+		return newAgent(eventing.Handler, representation1.NewCache(NamespaceName))
 	})
 }
 
-func newAgent(handler eventing.Agent) *agentT {
+func newAgent(handler eventing.Agent, state *representation1.Cache) *agentT {
 	a := new(agentT)
-	a.enabled = new(atomic.Bool)
-	a.enabled.Store(true)
-	a.timeout = defaultTimeout
-
+	if state == nil {
+		a.state = representation1.Initialize()
+	} else {
+		a.state = state
+	}
 	a.exchange = httpx.Do
-	a.ticker = messaging.NewTicker(messaging.ChannelEmissary, maxDuration)
+	a.ticker = messaging.NewTicker(messaging.ChannelEmissary, a.state.Interval)
 	a.emissary = messaging.NewEmissaryChannel()
 	a.handler = handler
 	return a
@@ -74,20 +67,20 @@ func (a *agentT) Message(m *messaging.Message) {
 	if m == nil {
 		return
 	}
-	if !a.running {
+	if !a.state.Running {
 		if m.Name() == messaging.ConfigEvent {
 			a.configure(m)
 			return
 		}
 		if m.Name() == messaging.StartupEvent {
 			a.run()
-			a.running = true
+			a.state.Running = true
 			return
 		}
 		return
 	}
 	if m.Name() == messaging.ShutdownEvent {
-		a.running = false
+		a.state.Running = false
 	}
 	a.emissary.C <- m
 }
@@ -100,7 +93,7 @@ func (a *agentT) run() {
 // Log - implementation for Requester interface
 func (a *agentT) Log() bool              { return true }
 func (a *agentT) Route() string          { return Route }
-func (a *agentT) Timeout() time.Duration { return a.timeout }
+func (a *agentT) Timeout() time.Duration { return a.state.Timeout }
 func (a *agentT) Do() rest.Exchange      { return a.exchange }
 
 // Link - chainable exchange
@@ -114,7 +107,7 @@ func (a *agentT) Link(next rest.Exchange) rest.Exchange {
 			status *messaging.Status
 		)
 		// cache lookup
-		url = uri.BuildURL(a.hostName, r.URL.Path, r.URL.Query())
+		url = uri.BuildURL(a.state.Host, r.URL.Path, r.URL.Query())
 		h := make(http.Header)
 		h.Add(httpx.XRequestId, r.Header.Get(httpx.XRequestId))
 		resp, status = request.Do(a, http.MethodGet, url, h, nil)
@@ -142,10 +135,12 @@ func (a *agentT) Link(next rest.Exchange) rest.Exchange {
 func (a *agentT) configure(m *messaging.Message) {
 	switch m.ContentType() {
 	case messaging.ContentTypeMap:
-		var ok bool
-		if a.hostName, ok = config.CacheHostName(a, m); !ok {
+		cfg := messaging.ConfigMapContent(m)
+		if cfg == nil {
+			messaging.Reply(m, messaging.ConfigEmptyStatusError(a), a.Name())
 			return
 		}
+		a.state.Update(cfg)
 	case httpx.ContentTypeExchange:
 		if ex, ok := httpx.ConfigExchangeContent(m); ok {
 			a.exchange = ex
@@ -155,10 +150,10 @@ func (a *agentT) configure(m *messaging.Message) {
 }
 
 func (a *agentT) cacheable(r *http.Request) bool {
-	if a.hostName == "" || r.Method != http.MethodGet || httpx.CacheControlNoCache(r.Header) {
+	if a.state.Host == "" || r.Method != http.MethodGet || httpx.CacheControlNoCache(r.Header) {
 		return false
 	}
-	return a.enabled.Load()
+	return a.state.Enabled.Load()
 }
 
 func (a *agentT) emissaryShutdown() {

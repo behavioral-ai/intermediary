@@ -1,38 +1,51 @@
 package representation1
 
+import "C"
 import (
+	"github.com/behavioral-ai/core/fmtx"
 	"net/http"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
 const (
 	Fragment        = "v1"
-	hostKey         = "host"
-	cacheControlKey = "cache-control"
-	sundayKey       = "sun"
-	mondayKey       = "mon"
-	tuesdayKey      = "tue"
-	wednesdayKey    = "wed"
-	thursdayKey     = "thu"
-	fridayKey       = "fri"
-	saturdayKey     = "sat"
+	HostKey         = "host"
+	CacheControlKey = "cache-control"
+	SundayKey       = "sun"
+	MondayKey       = "mon"
+	TuesdayKey      = "tue"
+	WednesdayKey    = "wed"
+	ThursdayKey     = "thu"
+	FridayKey       = "fri"
+	SaturdayKey     = "sat"
+	TimeoutKey      = "timeout"
 	rangeSeparator  = "-"
+
+	defaultInterval = time.Minute * 30
+	defaultTimeout  = time.Millisecond * 3000
 )
 
 type Cache struct {
-	Running bool
-	Host    string
-	Policy  http.Header
-	Days    map[string]Range
+	Running  bool
+	Enabled  *atomic.Bool
+	Host     string
+	Timeout  time.Duration
+	Interval time.Duration
+	Policy   http.Header
+	Days     map[string]Range
 }
 
 // Initialize - add a default policy
 func Initialize() *Cache {
 	c := new(Cache)
+	c.Enabled = new(atomic.Bool)
+	c.Enabled.Store(true)
+	c.Timeout = defaultTimeout
+	c.Interval = defaultInterval
 	c.Policy = make(http.Header)
-	//c.Policy.Add(cacheControlKey, "max-age=0")
 	c.Days = make(map[string]Range)
 	return c
 }
@@ -48,55 +61,73 @@ func newCache(name string, m map[string]string) *Cache {
 	return c
 }
 
-func (c *Cache) Enabled() bool {
-	return c.Host != ""
-}
-
 func (c *Cache) Now() bool {
 	ts := time.Now()
 	day := ts.Weekday()
 	s := ""
 	switch day {
 	case 0:
-		s = sundayKey
+		s = SundayKey
 	case 1:
-		s = mondayKey
+		s = MondayKey
 	case 2:
-		s = tuesdayKey
+		s = TuesdayKey
 	case 3:
-		s = wednesdayKey
+		s = WednesdayKey
 	case 4:
-		s = thursdayKey
+		s = ThursdayKey
 	case 5:
-		s = fridayKey
+		s = FridayKey
 	case 6:
-		s = saturdayKey
+		s = SaturdayKey
 	}
 	return c.Days[s].In(ts)
+}
+
+func (c *Cache) Update(m map[string]string) {
+	parseCache(c, m)
 }
 
 func parseCache(c *Cache, m map[string]string) {
 	if c == nil || m == nil {
 		return
 	}
-	c.Host = m[hostKey]
-	c.Policy.Add(cacheControlKey, m[cacheControlKey])
+	s := m[HostKey]
+	if s != "" {
+		c.Host = s
+	}
+	s = m[CacheControlKey]
+	if s != "" {
+		c.Policy.Set(CacheControlKey, s)
+	}
+	s = m[TimeoutKey]
+	if s != "" {
+		dur, err := fmtx.ParseDuration(s)
+		if err != nil {
+			//messaging.Reply(m, messaging.ConfigContentStatusError(agent, TimeoutKey), agent.Name())
+			return
+		}
+		c.Timeout = dur
+	}
 	parseDays(c, m)
-
 }
 
 func parseDays(c *Cache, m map[string]string) {
-	parseDay(c, sundayKey, m)
-	parseDay(c, mondayKey, m)
-	parseDay(c, tuesdayKey, m)
-	parseDay(c, wednesdayKey, m)
-	parseDay(c, thursdayKey, m)
-	parseDay(c, fridayKey, m)
-	parseDay(c, saturdayKey, m)
+	parseDay(c, SundayKey, m)
+	parseDay(c, MondayKey, m)
+	parseDay(c, TuesdayKey, m)
+	parseDay(c, WednesdayKey, m)
+	parseDay(c, ThursdayKey, m)
+	parseDay(c, FridayKey, m)
+	parseDay(c, SaturdayKey, m)
 }
 
 func parseDay(c *Cache, key string, m map[string]string) {
-	r := NewRange(m[key])
+	s := m[key]
+	if s == "" {
+		return
+	}
+	r := NewRange(s)
 	if !r.Empty() {
 		c.Days[key] = r
 	}
@@ -109,6 +140,9 @@ type Range struct {
 }
 
 func NewRange(s string) Range {
+	if s == "" {
+		return Range{}
+	}
 	tokens := strings.Split(strings.Trim(s, " "), rangeSeparator)
 	if len(tokens) != 2 {
 		return Range{}

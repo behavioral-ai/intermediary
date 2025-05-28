@@ -13,13 +13,13 @@ import (
 
 func ExampleNew() {
 	//url := "https://www.google.com/search"
-	a := newAgent(eventtest.New())
+	a := newAgent(eventtest.New(), nil)
 
 	fmt.Printf("test: newAgent() -> %v\n", a.Name())
 	m := make(map[string]string)
 	m[config.CacheHostKey] = "google.com"
 	a.Message(messaging.NewConfigMapMessage(m))
-	fmt.Printf("test: Message() -> %v\n", a.hostName)
+	fmt.Printf("test: Message() -> %v\n", a.state.Host)
 
 	//Output:
 	//test: newAgent() -> resiliency:agent/cache/request/http
