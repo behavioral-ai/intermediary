@@ -1,6 +1,5 @@
 package representation1
 
-import "C"
 import (
 	"github.com/behavioral-ai/core/fmtx"
 	"net/http"
