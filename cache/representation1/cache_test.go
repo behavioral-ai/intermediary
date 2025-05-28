@@ -44,7 +44,7 @@ func Example_ParseCache() {
 
 func Example_NewCache() {
 	c := newCache("", m)
-	fmt.Printf("test: newCache() -> [enabled:%v]\n", c.Enabled())
+	fmt.Printf("test: newCache() -> [enabled:%v]\n", c.Host != "")
 
 	fmt.Printf("test: newCache() -> [now:%v]\n", c.Now())
 

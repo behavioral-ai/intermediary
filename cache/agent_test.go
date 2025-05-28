@@ -7,7 +7,7 @@ import (
 	"github.com/behavioral-ai/core/iox"
 	"github.com/behavioral-ai/core/messaging"
 	"github.com/behavioral-ai/core/rest"
-	"github.com/behavioral-ai/intermediary/config"
+	"github.com/behavioral-ai/intermediary/cache/representation1"
 	"net/http"
 )
 
@@ -17,7 +17,7 @@ func ExampleNew() {
 
 	fmt.Printf("test: newAgent() -> %v\n", a.Name())
 	m := make(map[string]string)
-	m[config.CacheHostKey] = "google.com"
+	m[representation1.HostKey] = "google.com"
 	a.Message(messaging.NewConfigMapMessage(m))
 	fmt.Printf("test: Message() -> %v\n", a.state.Host)
 
