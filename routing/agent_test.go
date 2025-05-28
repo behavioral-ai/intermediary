@@ -5,7 +5,7 @@ import (
 	"github.com/behavioral-ai/core/eventing/eventtest"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/messaging"
-	"github.com/behavioral-ai/intermediary/config"
+	"github.com/behavioral-ai/intermediary/routing/representation1"
 	"net/http"
 	"time"
 )
@@ -16,7 +16,7 @@ func ExampleNew() {
 	fmt.Printf("test: newAgent() -> %v\n", a.Name())
 
 	m := make(map[string]string)
-	m[config.AppHostKey] = "google.com"
+	m[representation1.AppHostKey] = "google.com"
 	a.Message(messaging.NewConfigMapMessage(m))
 	time.Sleep(time.Second * 2)
 	rt, ok := a.router.Lookup(defaultRoute)
