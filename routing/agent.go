@@ -114,10 +114,6 @@ func (a *agentT) Exchange(r *http.Request) (resp *http.Response, err error) {
 
 func (a *agentT) configure(m *messaging.Message) {
 	switch m.ContentType() {
-	case httpx.ContentTypeExchange:
-		if ex, ok := httpx.ConfigExchangeContent(m); ok {
-			a.router.Modify(defaultRoute, a.state.AppHost, ex)
-		}
 	case messaging.ContentTypeMap:
 		cfg := messaging.ConfigMapContent(m)
 		if cfg == nil {

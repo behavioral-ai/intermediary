@@ -154,14 +154,6 @@ func (a *agentT) configure(m *messaging.Message) {
 		}
 		a.state.Update(cfg)
 	}
-	/*
-		case httpx.ContentTypeExchange:
-			if ex, ok := httpx.ConfigExchangeContent(m); ok {
-				a.exchange = ex
-			}
-		}
-	*/
-
 	messaging.Reply(m, messaging.StatusOK(), a.Name())
 }
 

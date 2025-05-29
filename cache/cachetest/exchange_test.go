@@ -29,7 +29,7 @@ func ExampleExchange() {
 	//agent := repository.Agent(cache.NamespaceName)
 
 	// configure exchange and host name
-	repository.Message(httpx.NewConfigExchangeMessage(Exchange))
+	//repository.Message(httpx.NewConfigExchangeMessage(Exchange))
 	cfg := make(map[string]string)
 	cfg[representation1.HostKey] = "localhost:8082"
 	repository.Message(messaging.NewConfigMapMessage(cfg))
