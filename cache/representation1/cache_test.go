@@ -2,20 +2,28 @@ package representation1
 
 import (
 	"fmt"
+	"github.com/behavioral-ai/collective/resource"
 	"time"
+)
+
+const (
+	NamespaceName = "resiliency:agent/cache/request/http"
+	Route         = "cache"
 )
 
 var (
 	m = map[string]string{
-		"host":          "www.google.com",
-		"cache-control": "no-store, no-cache, max-age=0",
-		"sun":           "13-15",
-		"mon":           "8-16",
-		"tue":           "6-10",
-		"wed":           "12-12",
-		"thu":           "0-23",
-		"fri":           "22-23",
-		"sat":           "3-8",
+		HostKey:         "www.google.com",
+		CacheControlKey: "no-store, no-cache, max-age=0",
+		TimeoutKey:      "750ms",
+		IntervalKey:     "4m",
+		SundayKey:       "13-15",
+		MondayKey:       "8-16",
+		TuesdayKey:      "6-10",
+		WednesdayKey:    "12-12",
+		ThursdayKey:     "0-23",
+		FridayKey:       "22-23",
+		SaturdayKey:     "3-8",
 	}
 
 	m2 = map[string]string{
@@ -31,30 +39,38 @@ var (
 	}
 )
 
-func Example_ParseCache() {
-	c := Initialize()
-	parseCache(c, m)
+func ExampleParseCache() {
+	var cache Cache
+	parseCache(&cache, m)
 
-	fmt.Printf("test: parseCache() -> %v\n", c)
+	fmt.Printf("test: parseCache() -> %v\n", cache)
 
 	//Output:
-	//test: parseCache() -> &{false www.google.com map[Cache-Control:[no-store, no-cache, max-age=0]] map[fri:{22 23} mon:{8 16} sat:{3 8} sun:{13 15} thu:{0 23} tue:{6 10} wed:{12 12}]}
+	//test: parseCache() -> {false <nil> www.google.com 750ms 4m0s map[Cache-Control:[no-store, no-cache, max-age=0]] map[fri:{22 23} mon:{8 16} sat:{3 8} sun:{13 15} thu:{0 23} tue:{6 10} wed:{12 12}]}
 
 }
 
-func Example_NewCache() {
-	c := newCache("", m)
-	fmt.Printf("test: newCache() -> [enabled:%v]\n", c.Host != "")
+func ExampleNewCache() {
+	resource.NewAgent()
 
-	fmt.Printf("test: newCache() -> [now:%v]\n", c.Now())
+	status := resource.Resolver.AddRepresentation(NamespaceName, Fragment, "author", m)
+	fmt.Printf("test: AddRepresentation() -> [status:%v]\n", status)
 
-	c = newCache("", m2)
-	fmt.Printf("test: newCache() -> [now:%v]\n", c.Now())
+	ct, status2 := resource.Resolver.Representation(NamespaceName, Fragment)
+	fmt.Printf("test: Representation() -> [ct:%v] [status:%v]\n", ct, status2)
+
+	if buf, ok := ct.Value.([]byte); ok {
+		fmt.Printf("test: Representation() -> [value:%v] [status:%v]\n", len(buf), status2)
+	}
+
+	l := NewCache(NamespaceName)
+	fmt.Printf("test: NewCache() -> %v\n", l)
 
 	//Output:
-	//test: newCache() -> [enabled:true]
-	//test: newCache() -> [now:false]
-	//test: newCache() -> [now:true]
+	//test: AddRepresentation() -> [status:OK]
+	//test: Representation() -> [ct:fragment: v1 type: application/json value: true] [status:OK]
+	//test: Representation() -> [value:200] [status:OK]
+	//test: NewCache() -> &{false 0xc00010e138 www.google.com 750ms 4m0s map[Cache-Control:[no-store, no-cache, max-age=0]] map[fri:{22 23} mon:{8 16} sat:{3 8} sun:{13 15} thu:{0 23} tue:{6 10} wed:{12 12}]}
 
 }
 

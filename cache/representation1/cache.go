@@ -1,6 +1,7 @@
 package representation1
 
 import (
+	"github.com/behavioral-ai/collective/resource"
 	"github.com/behavioral-ai/core/fmtx"
 	"net/http"
 	"strconv"
@@ -13,6 +14,8 @@ const (
 	Fragment        = "v1"
 	HostKey         = "host"
 	CacheControlKey = "cache-control"
+	TimeoutKey      = "timeout"
+	IntervalKey     = "interval"
 	SundayKey       = "sun"
 	MondayKey       = "mon"
 	TuesdayKey      = "tue"
@@ -20,7 +23,6 @@ const (
 	ThursdayKey     = "thu"
 	FridayKey       = "fri"
 	SaturdayKey     = "sat"
-	TimeoutKey      = "timeout"
 	rangeSeparator  = "-"
 
 	defaultInterval = time.Minute * 30
@@ -50,11 +52,11 @@ func Initialize() *Cache {
 }
 
 func NewCache(name string) *Cache {
-	m := make(map[string]string)
-	return newCache(name, m)
+	m, _ := resource.Resolve[map[string]string](name, Fragment, resource.Resolver)
+	return newCache(m)
 }
 
-func newCache(name string, m map[string]string) *Cache {
+func newCache(m map[string]string) *Cache {
 	c := Initialize()
 	parseCache(c, m)
 	return c
@@ -91,6 +93,12 @@ func parseCache(c *Cache, m map[string]string) {
 	if c == nil || m == nil {
 		return
 	}
+	if c.Policy == nil {
+		c.Policy = make(http.Header)
+	}
+	if c.Days == nil {
+		c.Days = make(map[string]Range)
+	}
 	s := m[HostKey]
 	if s != "" {
 		c.Host = s
@@ -107,6 +115,15 @@ func parseCache(c *Cache, m map[string]string) {
 			return
 		}
 		c.Timeout = dur
+	}
+	s = m[IntervalKey]
+	if s != "" {
+		dur, err := fmtx.ParseDuration(s)
+		if err != nil {
+			//messaging.Reply(m, messaging.ConfigContentStatusError(agent, TimeoutKey), agent.Name())
+			return
+		}
+		c.Interval = dur
 	}
 	parseDays(c, m)
 }
