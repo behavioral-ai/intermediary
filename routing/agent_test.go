@@ -46,7 +46,7 @@ func ExampleExchange() {
 	fmt.Printf("test: Exchange() -> [resp:%v] [err:%v]\n", resp.StatusCode, err)
 
 	//Output:
-	//notify-> 2025-03-25T14:44:49.521Z [resiliency:agent/routing/request/http [core:messaging.status] [] [Invalid Argument] [host configuration is empty]
+	//notify-> 2025-03-25T14:44:49.521Z [resiliency:agent/routing/request/http] [core:messaging.status] [] [Invalid Argument] [host configuration is empty]
 	//test: Exchange() -> [resp:500] [err:host configuration is empty]
 	//test: Exchange() -> [resp:200] [err:<nil>]
 
