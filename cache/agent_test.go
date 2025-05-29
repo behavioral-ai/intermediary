@@ -13,7 +13,7 @@ import (
 
 func ExampleNew() {
 	//url := "https://www.google.com/search"
-	a := newAgent(eventtest.New(), nil)
+	a := newAgent(eventtest.New(), nil, nil)
 
 	fmt.Printf("test: newAgent() -> %v\n", a.Name())
 	m := make(map[string]string)

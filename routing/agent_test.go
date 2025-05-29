@@ -11,7 +11,7 @@ import (
 )
 
 func ExampleNew() {
-	a := newAgent(eventtest.New(), nil)
+	a := newAgent(eventtest.New(), nil, nil)
 
 	fmt.Printf("test: newAgent() -> %v\n", a.Name())
 
@@ -30,7 +30,7 @@ func ExampleNew() {
 
 func ExampleExchange() {
 	url := "http://localhost:8080/search?q=golang"
-	a := newAgent(eventtest.New(), nil)
+	a := newAgent(eventtest.New(), nil, nil)
 	ex := a.Exchange
 
 	req, _ := http.NewRequest(http.MethodGet, url, nil)

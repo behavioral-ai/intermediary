@@ -27,9 +27,9 @@ var (
 )
 
 type agentT struct {
-	state *representation1.Cache
-
+	state    *representation1.Cache
 	exchange rest.Exchange
+
 	ticker   *messaging.Ticker
 	emissary *messaging.Channel
 	handler  eventing.Agent
@@ -38,26 +38,30 @@ type agentT struct {
 // init - register an agent constructor
 func init() {
 	repository.RegisterConstructor(NamespaceName, func() messaging.Agent {
-		return newAgent(eventing.Handler, representation1.NewCache(NamespaceName))
+		return newAgent(eventing.Handler, representation1.NewCache(NamespaceName), nil)
 	})
 }
 
-func ConstructorOverride(m map[string]string) {
+func ConstructorOverride(m map[string]string, ex rest.Exchange) {
 	repository.RegisterConstructor(NamespaceName, func() messaging.Agent {
 		c := representation1.Initialize()
 		c.Update(m)
-		return newAgent(eventing.Handler, c)
+		return newAgent(eventing.Handler, c, ex)
 	})
 }
 
-func newAgent(handler eventing.Agent, state *representation1.Cache) *agentT {
+func newAgent(handler eventing.Agent, state *representation1.Cache, ex rest.Exchange) *agentT {
 	a := new(agentT)
 	if state == nil {
 		a.state = representation1.Initialize()
 	} else {
 		a.state = state
 	}
-	a.exchange = httpx.Do
+	if ex == nil {
+		a.exchange = httpx.Do
+	} else {
+		a.exchange = ex
+	}
 	a.ticker = messaging.NewTicker(messaging.ChannelEmissary, a.state.Interval)
 	a.emissary = messaging.NewEmissaryChannel()
 	a.handler = handler
