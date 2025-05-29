@@ -8,7 +8,7 @@ import (
 	"github.com/behavioral-ai/core/iox"
 	"github.com/behavioral-ai/core/messaging"
 	"github.com/behavioral-ai/intermediary/cache"
-	"github.com/behavioral-ai/intermediary/config"
+	"github.com/behavioral-ai/intermediary/cache/representation1"
 	"net/http"
 	"net/http/httptest"
 )
@@ -31,7 +31,7 @@ func ExampleExchange() {
 	// configure exchange and host name
 	repository.Message(httpx.NewConfigExchangeMessage(Exchange))
 	cfg := make(map[string]string)
-	cfg[config.CacheHostKey] = "localhost:8082"
+	cfg[representation1.HostKey] = "localhost:8082"
 	repository.Message(messaging.NewConfigMapMessage(cfg))
 
 	// create request

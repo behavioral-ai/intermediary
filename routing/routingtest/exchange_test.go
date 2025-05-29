@@ -7,9 +7,9 @@ import (
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/iox"
 	"github.com/behavioral-ai/core/messaging"
-	"github.com/behavioral-ai/intermediary/config"
 	"github.com/behavioral-ai/intermediary/routing"
 	_ "github.com/behavioral-ai/intermediary/routing"
+	"github.com/behavioral-ai/intermediary/routing/representation1"
 	"net/http"
 	"net/http/httptest"
 )
@@ -20,7 +20,7 @@ func ExampleExchange() {
 	// configure exchange and host name
 	agent.Message(httpx.NewConfigExchangeMessage(Exchange))
 	cfg := make(map[string]string)
-	cfg[config.AppHostKey] = "localhost:8080"
+	cfg[representation1.AppHostKey] = "localhost:8080"
 	agent.Message(messaging.NewConfigMapMessage(cfg))
 
 	// create request

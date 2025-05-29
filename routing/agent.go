@@ -32,10 +32,18 @@ type agentT struct {
 	handler eventing.Agent
 }
 
-// New - create a new cache agent
+// init - register an agent constructor
 func init() {
 	repository.RegisterConstructor(NamespaceName, func() messaging.Agent {
 		return newAgent(eventing.Handler, representation1.NewRouting(NamespaceName))
+	})
+}
+
+func ConstructorOverride(m map[string]string) {
+	repository.RegisterConstructor(NamespaceName, func() messaging.Agent {
+		c := representation1.Initialize()
+		c.Update(m)
+		return newAgent(eventing.Handler, c)
 	})
 }
 
