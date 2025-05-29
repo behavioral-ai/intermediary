@@ -8,7 +8,6 @@ import (
 
 const (
 	NamespaceName = "resiliency:agent/cache/request/http"
-	Route         = "cache"
 )
 
 var (

@@ -1,11 +1,13 @@
 package representation1
 
 import (
+	"github.com/behavioral-ai/collective/resource"
 	"github.com/behavioral-ai/core/fmtx"
 	"time"
 )
 
 const (
+	Fragment     = "v1"
 	logRouteName = "app"
 
 	AppHostKey  = "app-host"
@@ -29,11 +31,11 @@ func Initialize() *Routing {
 }
 
 func NewRouting(name string) *Routing {
-	m := make(map[string]string)
-	return newRouting(name, m)
+	m, _ := resource.Resolve[map[string]string](name, Fragment, resource.Resolver)
+	return newRouting(m)
 }
 
-func newRouting(name string, m map[string]string) *Routing {
+func newRouting(m map[string]string) *Routing {
 	c := Initialize()
 	parseRouting(c, m)
 	return c
