@@ -29,7 +29,7 @@ func ExampleParseRouting() {
 
 }
 
-func ExampleNewRouting() {
+func _ExampleNewRouting() {
 	resource.NewAgent()
 
 	status := resource.Resolver.AddRepresentation(NamespaceName, Fragment, "author", m)

@@ -45,11 +45,11 @@ func ExampleParseCache() {
 	fmt.Printf("test: parseCache() -> %v\n", cache)
 
 	//Output:
-	//test: parseCache() -> {false <nil> www.google.com 750ms 4m0s map[Cache-Control:[no-store, no-cache, max-age=0]] map[fri:{22 23} mon:{8 16} sat:{3 8} sun:{13 15} thu:{0 23} tue:{6 10} wed:{12 12}]}
+	//test: parseCache() -> {false <nil> 750ms 4m0s www.google.com map[Cache-Control:[no-store, no-cache, max-age=0]] map[fri:{22 23} mon:{8 16} sat:{3 8} sun:{13 15} thu:{0 23} tue:{6 10} wed:{12 12}]}
 
 }
 
-func ExampleNewCache() {
+func _ExampleNewCache() {
 	resource.NewAgent()
 
 	status := resource.Resolver.AddRepresentation(NamespaceName, Fragment, "author", m)

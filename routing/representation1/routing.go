@@ -1,7 +1,6 @@
 package representation1
 
 import (
-	"github.com/behavioral-ai/collective/resource"
 	"github.com/behavioral-ai/core/fmtx"
 	"time"
 )
@@ -14,11 +13,13 @@ const (
 	LogKey      = "log"
 	LogRouteKey = "route-name"
 	TimeoutKey  = "timeout"
+
+	defaultTimeout = time.Millisecond * 2500
 )
 
 type Routing struct {
 	Log          bool
-	AppHost      string
+	AppHost      string // User requirement
 	LogRouteName string
 	Timeout      time.Duration
 }
@@ -27,12 +28,13 @@ func Initialize() *Routing {
 	r := new(Routing)
 	r.Log = true
 	r.LogRouteName = logRouteName
+	r.Timeout = defaultTimeout
 	return r
 }
 
 func NewRouting(name string) *Routing {
-	m, _ := resource.Resolve[map[string]string](name, Fragment, resource.Resolver)
-	return newRouting(m)
+	//m, _ := resource.Resolve[map[string]string](name, Fragment, resource.Resolver)
+	return newRouting(nil)
 }
 
 func newRouting(m map[string]string) *Routing {

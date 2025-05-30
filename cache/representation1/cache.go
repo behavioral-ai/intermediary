@@ -1,7 +1,6 @@
 package representation1
 
 import (
-	"github.com/behavioral-ai/collective/resource"
 	"github.com/behavioral-ai/core/fmtx"
 	"net/http"
 	"strconv"
@@ -26,24 +25,24 @@ const (
 	rangeSeparator  = "-"
 
 	defaultInterval = time.Minute * 30
-	defaultTimeout  = time.Millisecond * 3000
+	defaultTimeout  = time.Millisecond * 2000
 )
 
 type Cache struct {
 	Running  bool
 	Enabled  *atomic.Bool
-	Host     string
 	Timeout  time.Duration
 	Interval time.Duration
-	Policy   http.Header
-	Days     map[string]Range
+	Host     string           // User requirement
+	Policy   http.Header      // User requirement
+	Days     map[string]Range // User requirement
 }
 
 // Initialize - add a default policy
 func Initialize() *Cache {
 	c := new(Cache)
 	c.Enabled = new(atomic.Bool)
-	c.Enabled.Store(true)
+	c.Enabled.Store(false)
 	c.Timeout = defaultTimeout
 	c.Interval = defaultInterval
 	c.Policy = make(http.Header)
@@ -52,8 +51,8 @@ func Initialize() *Cache {
 }
 
 func NewCache(name string) *Cache {
-	m, _ := resource.Resolve[map[string]string](name, Fragment, resource.Resolver)
-	return newCache(m)
+	//m, _ := resource.Resolve[map[string]string](name, Fragment, resource.Resolver)
+	return newCache(nil)
 }
 
 func newCache(m map[string]string) *Cache {
