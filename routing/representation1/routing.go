@@ -24,22 +24,26 @@ type Routing struct {
 	Timeout      time.Duration
 }
 
-func Initialize() *Routing {
+func Initialize(m map[string]string) *Routing {
 	r := new(Routing)
 	r.Log = true
 	r.LogRouteName = logRouteName
 	r.Timeout = defaultTimeout
+	parseRouting(r, m)
 	return r
 }
 
+/*
 func NewRouting(name string) *Routing {
 	//m, _ := resource.Resolve[map[string]string](name, Fragment, resource.Resolver)
 	return newRouting(nil)
 }
 
+
+*/
+
 func newRouting(m map[string]string) *Routing {
-	c := Initialize()
-	parseRouting(c, m)
+	c := Initialize(m)
 	return c
 }
 

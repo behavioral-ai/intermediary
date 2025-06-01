@@ -3,9 +3,9 @@ package routing
 import (
 	"errors"
 	"fmt"
+	center "github.com/behavioral-ai/center/messaging"
 	"github.com/behavioral-ai/collective/repository"
 	"github.com/behavioral-ai/core/access2"
-	"github.com/behavioral-ai/core/eventing"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/messaging"
 	"github.com/behavioral-ai/core/rest"
@@ -28,38 +28,33 @@ var (
 type agentT struct {
 	state  *representation1.Routing
 	router *rest.Router
+	comms  *center.Communication
 
-	handler eventing.Agent
+	review *messaging.Review
 }
 
 // init - register an agent constructor
 func init() {
 	repository.RegisterConstructor(NamespaceName, func() messaging.Agent {
-		return newAgent(eventing.Handler, representation1.NewRouting(NamespaceName), nil)
+		return newAgent(representation1.Initialize(nil), nil, center.Comms)
 	})
 }
 
-func ConstructorOverride(m map[string]string, ex rest.Exchange) {
+func ConstructorOverride(m map[string]string, ex rest.Exchange, comms *center.Communication) {
 	repository.RegisterConstructor(NamespaceName, func() messaging.Agent {
-		c := representation1.Initialize()
-		c.Update(m)
-		return newAgent(eventing.Handler, c, ex)
+		return newAgent(representation1.Initialize(m), ex, comms)
 	})
 }
 
-func newAgent(handler eventing.Agent, state *representation1.Routing, ex rest.Exchange) *agentT {
+func newAgent(state *representation1.Routing, ex rest.Exchange, comms *center.Communication) *agentT {
 	a := new(agentT)
-	if state == nil {
-		a.state = representation1.Initialize()
-	} else {
-		a.state = state
-	}
+	a.state = state
+	a.comms = comms
 	if ex == nil {
 		ex = httpx.Do
 	}
 	a.router = rest.NewRouter()
 	a.router.Modify(defaultRoute, a.state.AppHost, ex)
-	a.handler = handler
 	return a
 }
 
@@ -74,7 +69,7 @@ func (a *agentT) Message(m *messaging.Message) {
 	if m == nil {
 		return
 	}
-	if m.Name() == messaging.ConfigEvent {
+	if m.Name == messaging.ConfigEvent {
 		a.configure(m)
 	}
 }
@@ -95,7 +90,7 @@ func (a *agentT) Exchange(r *http.Request) (resp *http.Response, err error) {
 	rt, ok := a.router.Lookup(defaultRoute)
 	if !ok || rt != nil && rt.Uri == "" {
 		status := messaging.NewStatus(messaging.StatusInvalidArgument, errors.New("host configuration is empty")).WithLocation(a.Name())
-		a.handler.Notify(status)
+		a.comms.Notify(messaging.NewStatusMessage(status, a.Name()))
 		return serverErrorResponse, status.Err
 	}
 	var status *messaging.Status
@@ -104,7 +99,7 @@ func (a *agentT) Exchange(r *http.Request) (resp *http.Response, err error) {
 	// TODO : need to check and remove Caching header.
 	resp, status = request.Do(a, r.Method, url, httpx.CloneHeaderWithEncoding(r), r.Body)
 	if status.Err != nil {
-		a.handler.Notify(status.WithLocation(a.Name()))
+		a.comms.Notify(messaging.NewStatusMessage(status.WithLocation(a.Name()), a.Name()))
 	}
 	if resp.StatusCode == http.StatusGatewayTimeout {
 		resp.Header.Add(access2.XTimeout, fmt.Sprintf("%v", a.state.Timeout))
@@ -112,17 +107,38 @@ func (a *agentT) Exchange(r *http.Request) (resp *http.Response, err error) {
 	return resp, status.Err
 }
 
+func (a *agentT) trace(task, observation, action string) {
+	if a.review == nil {
+		return
+	}
+	if !a.review.Started() {
+		a.review.Start()
+	}
+	if a.review.Expired() {
+		return
+	}
+	a.comms.Trace(a.Name(), task, observation, action)
+}
+
 func (a *agentT) configure(m *messaging.Message) {
 	switch m.ContentType() {
 	case messaging.ContentTypeMap:
 		cfg := messaging.ConfigMapContent(m)
 		if cfg == nil {
-			messaging.Reply(m, messaging.ConfigEmptyStatusError(a), a.Name())
+			messaging.Reply(m, messaging.ConfigEmptyMapError(a.Name()), a.Name())
 			return
 		}
 		a.state.Update(cfg)
 		a.router.Modify(defaultRoute, a.state.AppHost, nil)
+	case messaging.ContentTypeReview:
+		r := messaging.ReviewContent(m)
+		if r == nil {
+			messaging.Reply(m, messaging.ConfigEmptyReviewError(a.Name()), a.Name())
+			return
+		}
+		a.review = r
 	}
+
 	messaging.Reply(m, messaging.StatusOK(), a.Name())
 }
 

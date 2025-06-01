@@ -2,7 +2,7 @@ package routing
 
 import (
 	"fmt"
-	"github.com/behavioral-ai/core/eventing/eventtest"
+	centertest "github.com/behavioral-ai/center/messaging/messagingtest"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/messaging"
 	"github.com/behavioral-ai/intermediary/routing/representation1"
@@ -11,7 +11,7 @@ import (
 )
 
 func ExampleNew() {
-	a := newAgent(eventtest.New(), nil, nil)
+	a := newAgent(representation1.Initialize(nil), nil, centertest.Comms)
 
 	fmt.Printf("test: newAgent() -> %v\n", a.Name())
 
@@ -30,7 +30,7 @@ func ExampleNew() {
 
 func ExampleExchange() {
 	url := "http://localhost:8080/search?q=golang"
-	a := newAgent(eventtest.New(), nil, nil)
+	a := newAgent(representation1.Initialize(nil), nil, centertest.Comms)
 	ex := a.Exchange
 
 	req, _ := http.NewRequest(http.MethodGet, url, nil)

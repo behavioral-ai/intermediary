@@ -39,7 +39,7 @@ type Cache struct {
 }
 
 // Initialize - add a default policy
-func Initialize() *Cache {
+func Initialize(m map[string]string) *Cache {
 	c := new(Cache)
 	c.Enabled = new(atomic.Bool)
 	c.Enabled.Store(false)
@@ -47,17 +47,19 @@ func Initialize() *Cache {
 	c.Interval = defaultInterval
 	c.Policy = make(http.Header)
 	c.Days = make(map[string]Range)
+	parseCache(c, m)
 	return c
 }
 
+/*
 func NewCache(name string) *Cache {
 	//m, _ := resource.Resolve[map[string]string](name, Fragment, resource.Resolver)
 	return newCache(nil)
 }
+*/
 
 func newCache(m map[string]string) *Cache {
-	c := Initialize()
-	parseCache(c, m)
+	c := Initialize(m)
 	return c
 }
 

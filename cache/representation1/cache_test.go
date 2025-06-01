@@ -62,8 +62,8 @@ func _ExampleNewCache() {
 		fmt.Printf("test: Representation() -> [value:%v] [status:%v]\n", len(buf), status2)
 	}
 
-	l := NewCache(NamespaceName)
-	fmt.Printf("test: NewCache() -> %v\n", l)
+	//l := NewCache(NamespaceName)
+	//fmt.Printf("test: NewCache() -> %v\n", l)
 
 	//Output:
 	//test: AddRepresentation() -> [status:OK]

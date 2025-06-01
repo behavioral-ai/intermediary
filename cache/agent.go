@@ -2,9 +2,9 @@ package cache
 
 import (
 	"bytes"
+	center "github.com/behavioral-ai/center/messaging"
 	"github.com/behavioral-ai/collective/repository"
 	"github.com/behavioral-ai/core/access2"
-	"github.com/behavioral-ai/core/eventing"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/messaging"
 	"github.com/behavioral-ai/core/rest"
@@ -29,34 +29,30 @@ var (
 type agentT struct {
 	state    *representation1.Cache
 	exchange rest.Exchange
+	comms    *center.Communication
 
+	review   *messaging.Review
 	ticker   *messaging.Ticker
 	emissary *messaging.Channel
-	handler  eventing.Agent
 }
 
 // init - register an agent constructor
 func init() {
 	repository.RegisterConstructor(NamespaceName, func() messaging.Agent {
-		return newAgent(eventing.Handler, representation1.NewCache(NamespaceName), nil)
+		return newAgent(representation1.Initialize(nil), nil, center.Comms)
 	})
 }
 
-func ConstructorOverride(m map[string]string, ex rest.Exchange) {
+func ConstructorOverride(m map[string]string, ex rest.Exchange, comms *center.Communication) {
 	repository.RegisterConstructor(NamespaceName, func() messaging.Agent {
-		c := representation1.Initialize()
-		c.Update(m)
-		return newAgent(eventing.Handler, c, ex)
+		return newAgent(representation1.Initialize(m), ex, comms)
 	})
 }
 
-func newAgent(handler eventing.Agent, state *representation1.Cache, ex rest.Exchange) *agentT {
+func newAgent(state *representation1.Cache, ex rest.Exchange, comms *center.Communication) *agentT {
 	a := new(agentT)
-	if state == nil {
-		a.state = representation1.Initialize()
-	} else {
-		a.state = state
-	}
+	a.state = state
+	a.comms = comms
 	if ex == nil {
 		a.exchange = httpx.Do
 	} else {
@@ -64,7 +60,6 @@ func newAgent(handler eventing.Agent, state *representation1.Cache, ex rest.Exch
 	}
 	a.ticker = messaging.NewTicker(messaging.ChannelEmissary, a.state.Interval)
 	a.emissary = messaging.NewEmissaryChannel()
-	a.handler = handler
 	return a
 }
 
@@ -80,18 +75,18 @@ func (a *agentT) Message(m *messaging.Message) {
 		return
 	}
 	if !a.state.Running {
-		if m.Name() == messaging.ConfigEvent {
+		if m.Name == messaging.ConfigEvent {
 			a.configure(m)
 			return
 		}
-		if m.Name() == messaging.StartupEvent {
+		if m.Name == messaging.StartupEvent {
 			a.run()
 			a.state.Running = true
 			return
 		}
 		return
 	}
-	if m.Name() == messaging.ShutdownEvent {
+	if m.Name == messaging.ShutdownEvent {
 		a.state.Running = false
 	}
 	a.emissary.C <- m
@@ -129,7 +124,7 @@ func (a *agentT) Link(next rest.Exchange) rest.Exchange {
 		}
 		resp.Header.Add(access2.XCached, "false")
 		if status.Err != nil {
-			a.handler.Notify(status.WithLocation(a.Name()))
+			a.comms.Notify(messaging.NewStatusMessage(status.WithLocation(a.Name()), a.Name()))
 		}
 		// cache miss, call next exchange
 		resp, err = next(r)
@@ -144,15 +139,35 @@ func (a *agentT) Link(next rest.Exchange) rest.Exchange {
 	}
 }
 
+func (a *agentT) trace(task, observation, action string) {
+	if a.review == nil {
+		return
+	}
+	if !a.review.Started() {
+		a.review.Start()
+	}
+	if a.review.Expired() {
+		return
+	}
+	a.comms.Trace(a.Name(), task, observation, action)
+}
+
 func (a *agentT) configure(m *messaging.Message) {
 	switch m.ContentType() {
 	case messaging.ContentTypeMap:
 		cfg := messaging.ConfigMapContent(m)
 		if cfg == nil {
-			messaging.Reply(m, messaging.ConfigEmptyStatusError(a), a.Name())
+			messaging.Reply(m, messaging.ConfigEmptyMapError(a.Name()), a.Name())
 			return
 		}
 		a.state.Update(cfg)
+	case messaging.ContentTypeReview:
+		r := messaging.ReviewContent(m)
+		if r == nil {
+			messaging.Reply(m, messaging.ConfigEmptyReviewError(a.Name()), a.Name())
+			return
+		}
+		a.review = r
 	}
 	messaging.Reply(m, messaging.StatusOK(), a.Name())
 }
@@ -179,7 +194,7 @@ func (a *agentT) cacheUpdate(url string, r *http.Request, resp *http.Response) e
 	buf, err = io.ReadAll(resp.Body)
 	if err != nil {
 		status = messaging.NewStatus(messaging.StatusIOError, err).WithLocation(a.Name())
-		a.handler.Notify(status)
+		a.comms.Notify(messaging.NewStatusMessage(status, a.Name()))
 		return err
 	}
 	resp.ContentLength = int64(len(buf))
@@ -191,7 +206,7 @@ func (a *agentT) cacheUpdate(url string, r *http.Request, resp *http.Response) e
 		h2.Add(httpx.XRequestId, r.Header.Get(httpx.XRequestId))
 		_, status = request.Do(a, http.MethodPut, url, h2, io.NopCloser(bytes.NewReader(buf)))
 		if status.Err != nil {
-			a.handler.Notify(status.WithLocation(a.Name()))
+			a.comms.Notify(messaging.NewStatusMessage(status.WithLocation(a.Name()), a.Name()))
 		}
 	}()
 	return nil

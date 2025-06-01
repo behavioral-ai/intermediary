@@ -42,8 +42,8 @@ func _ExampleNewRouting() {
 		fmt.Printf("test: Representation() -> [value:%v] [status:%v]\n", len(buf), status2)
 	}
 
-	l := NewRouting(NamespaceName)
-	fmt.Printf("test: NewRouting() -> %v\n", l)
+	//l := NewRouting(NamespaceName)
+	//fmt.Printf("test: NewRouting() -> %v\n", l)
 
 	//Output:
 	//test: AddRepresentation() -> [status:OK]
