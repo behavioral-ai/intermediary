@@ -2,6 +2,7 @@ package cache
 
 import (
 	"fmt"
+	"github.com/behavioral-ai/collective/operations/operationstest"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/iox"
 	"github.com/behavioral-ai/core/messaging"
