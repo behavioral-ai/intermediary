@@ -2,7 +2,6 @@ package cache
 
 import (
 	"fmt"
-	centertest "github.com/behavioral-ai/center/messaging/messagingtest"
 	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/iox"
 	"github.com/behavioral-ai/core/messaging"
@@ -13,7 +12,7 @@ import (
 
 func ExampleNew() {
 	//url := "https://www.google.com/search"
-	a := newAgent(representation1.Initialize(nil), nil, centertest.Comms)
+	a := newAgent(representation1.Initialize(nil), nil, operationstest.NewService())
 
 	fmt.Printf("test: newAgent() -> %v\n", a.Name())
 	m := make(map[string]string)

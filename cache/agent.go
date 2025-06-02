@@ -2,7 +2,7 @@ package cache
 
 import (
 	"bytes"
-	center "github.com/behavioral-ai/center/messaging"
+	"github.com/behavioral-ai/collective/operations"
 	"github.com/behavioral-ai/collective/repository"
 	"github.com/behavioral-ai/core/access2"
 	"github.com/behavioral-ai/core/httpx"
@@ -29,7 +29,7 @@ var (
 type agentT struct {
 	state    *representation1.Cache
 	exchange rest.Exchange
-	comms    *center.Communication
+	service  *operations.Service
 
 	review   *messaging.Review
 	ticker   *messaging.Ticker
@@ -39,20 +39,20 @@ type agentT struct {
 // init - register an agent constructor
 func init() {
 	repository.RegisterConstructor(NamespaceName, func() messaging.Agent {
-		return newAgent(representation1.Initialize(nil), nil, center.Comms)
+		return newAgent(representation1.Initialize(nil), nil, operations.Serve)
 	})
 }
 
-func ConstructorOverride(m map[string]string, ex rest.Exchange, comms *center.Communication) {
+func ConstructorOverride(m map[string]string, ex rest.Exchange, service *operations.Service) {
 	repository.RegisterConstructor(NamespaceName, func() messaging.Agent {
-		return newAgent(representation1.Initialize(m), ex, comms)
+		return newAgent(representation1.Initialize(m), ex, service)
 	})
 }
 
-func newAgent(state *representation1.Cache, ex rest.Exchange, comms *center.Communication) *agentT {
+func newAgent(state *representation1.Cache, ex rest.Exchange, service *operations.Service) *agentT {
 	a := new(agentT)
 	a.state = state
-	a.comms = comms
+	a.service = service
 	if ex == nil {
 		a.exchange = httpx.Do
 	} else {
@@ -124,7 +124,7 @@ func (a *agentT) Link(next rest.Exchange) rest.Exchange {
 		}
 		resp.Header.Add(access2.XCached, "false")
 		if status.Err != nil {
-			a.comms.Notify(messaging.NewStatusMessage(status.WithLocation(a.Name()), a.Name()))
+			a.service.Message(messaging.NewStatusMessage(status.WithLocation(a.Name()), a.Name()))
 		}
 		// cache miss, call next exchange
 		resp, err = next(r)
@@ -149,7 +149,7 @@ func (a *agentT) trace(task, observation, action string) {
 	if a.review.Expired() {
 		return
 	}
-	a.comms.Trace(a.Name(), task, observation, action)
+	a.service.Trace(a.Name(), task, observation, action)
 }
 
 func (a *agentT) configure(m *messaging.Message) {
@@ -194,7 +194,7 @@ func (a *agentT) cacheUpdate(url string, r *http.Request, resp *http.Response) e
 	buf, err = io.ReadAll(resp.Body)
 	if err != nil {
 		status = messaging.NewStatus(messaging.StatusIOError, err).WithLocation(a.Name())
-		a.comms.Notify(messaging.NewStatusMessage(status, a.Name()))
+		a.service.Message(messaging.NewStatusMessage(status, a.Name()))
 		return err
 	}
 	resp.ContentLength = int64(len(buf))
@@ -206,7 +206,7 @@ func (a *agentT) cacheUpdate(url string, r *http.Request, resp *http.Response) e
 		h2.Add(httpx.XRequestId, r.Header.Get(httpx.XRequestId))
 		_, status = request.Do(a, http.MethodPut, url, h2, io.NopCloser(bytes.NewReader(buf)))
 		if status.Err != nil {
-			a.comms.Notify(messaging.NewStatusMessage(status.WithLocation(a.Name()), a.Name()))
+			a.service.Message(messaging.NewStatusMessage(status.WithLocation(a.Name()), a.Name()))
 		}
 	}()
 	return nil
