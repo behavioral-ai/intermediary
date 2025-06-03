@@ -23,8 +23,8 @@ func ExampleNew() {
 	fmt.Printf("test: Message() -> [%v] [uri:%v] [ok:%v]\n", rt.Name, rt.Uri, ok)
 
 	//Output:
-	//test: newAgent() -> resiliency:agent/routing/request/http
-	//test: Message() -> [core:routing/default] [uri:google.com] [ok:true]
+	//test: newAgent() -> test:resiliency:agent/routing/request/http
+	//test: Message() -> [test:core:routing/default] [uri:google.com] [ok:true]
 
 }
 

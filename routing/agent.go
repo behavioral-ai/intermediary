@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	NamespaceName = "resiliency:agent/routing/request/http"
-	defaultRoute  = "core:routing/default"
+	NamespaceName = "test:resiliency:agent/routing/request/http"
+	defaultRoute  = "test:core:routing/default"
 )
 
 var (

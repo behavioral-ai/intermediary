@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	NamespaceName = "resiliency:agent/routing/request/http"
+	NamespaceName = "test:resiliency:agent/routing/request/http"
 )
 
 var (

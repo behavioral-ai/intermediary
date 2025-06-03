@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	NamespaceName = "resiliency:agent/cache/request/http"
+	NamespaceName = "test:resiliency:agent/cache/request/http"
 )
 
 var (
