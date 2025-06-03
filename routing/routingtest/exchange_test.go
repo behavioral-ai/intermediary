@@ -2,6 +2,7 @@ package routingtest
 
 import (
 	"fmt"
+	"github.com/behavioral-ai/collective/operations/operationstest"
 	"github.com/behavioral-ai/collective/repository"
 	"github.com/behavioral-ai/core/host"
 	"github.com/behavioral-ai/core/httpx"
@@ -18,7 +19,7 @@ func ExampleExchange_Override() {
 	cfg := make(map[string]string)
 	cfg[representation1.AppHostKey] = "localhost:8080"
 
-	routing.ConstructorOverride(cfg, Exchange)
+	routing.ConstructorOverride(cfg, Exchange, operationstest.NewService())
 	agent := repository.Agent(routing.NamespaceName)
 
 	// configure exchange and host name
