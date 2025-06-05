@@ -32,7 +32,7 @@ func ExampleExchange() {
 	//repository.Message(httpx.NewConfigExchangeMessage(Exchange))
 	cfg := make(map[string]string)
 	cfg[representation1.HostKey] = "localhost:8082"
-	repository.Message(messaging.NewConfigMapMessage(cfg))
+	repository.Message(messaging.NewMapMessage(cfg))
 
 	// create request
 	url := "https://localhost:8081/search?q=golang"

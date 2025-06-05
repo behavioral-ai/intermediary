@@ -35,7 +35,7 @@ func _ExampleNewRouting() {
 	status := resource.Resolver.AddRepresentation(NamespaceName, Fragment, "author", m)
 	fmt.Printf("test: AddRepresentation() -> [status:%v]\n", status)
 
-	ct, status2 := resource.Resolver.Representation(NamespaceName, Fragment)
+	ct, status2 := resource.Resolver.Representation(NamespaceName)
 	fmt.Printf("test: Representation() -> [ct:%v] [status:%v]\n", ct, status2)
 
 	if buf, ok := ct.Value.([]byte); ok {

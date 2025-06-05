@@ -5,9 +5,9 @@ import (
 	"github.com/behavioral-ai/collective/operations/operationstest"
 	"github.com/behavioral-ai/collective/repository"
 	"github.com/behavioral-ai/core/host"
-	"github.com/behavioral-ai/core/httpx"
 	"github.com/behavioral-ai/core/iox"
 	"github.com/behavioral-ai/core/messaging"
+	"github.com/behavioral-ai/core/rest"
 	"github.com/behavioral-ai/intermediary/routing"
 	_ "github.com/behavioral-ai/intermediary/routing"
 	"github.com/behavioral-ai/intermediary/routing/representation1"
@@ -63,8 +63,8 @@ func _ExampleExchange() {
 
 	agent := repository.Agent(routing.NamespaceName)
 	// configure exchange and host name
-	agent.Message(httpx.NewConfigExchangeMessage(Exchange))
-	agent.Message(messaging.NewConfigMapMessage(cfg))
+	agent.Message(rest.NewExchangeMessage(Exchange))
+	agent.Message(messaging.NewMapMessage(cfg))
 
 	// create request
 	url := "https://localhost:8081/search?q=golang"

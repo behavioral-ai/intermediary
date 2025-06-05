@@ -18,7 +18,7 @@ func ExampleNew() {
 	fmt.Printf("test: newAgent() -> %v\n", a.Name())
 	m := make(map[string]string)
 	m[representation1.HostKey] = "google.com"
-	a.Message(messaging.NewConfigMapMessage(m))
+	a.Message(messaging.NewMapMessage(m))
 	fmt.Printf("test: Message() -> %v\n", a.state.Host)
 
 	//Output:

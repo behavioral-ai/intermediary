@@ -17,7 +17,7 @@ func ExampleNew() {
 
 	m := make(map[string]string)
 	m[representation1.AppHostKey] = "google.com"
-	a.Message(messaging.NewConfigMapMessage(m))
+	a.Message(messaging.NewMapMessage(m))
 	time.Sleep(time.Second * 2)
 	rt, ok := a.router.Lookup(defaultRoute)
 	fmt.Printf("test: Message() -> [%v] [uri:%v] [ok:%v]\n", rt.Name, rt.Uri, ok)
