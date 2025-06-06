@@ -41,7 +41,7 @@ func ExampleExchange() {
 	httpx.AddRequestId(req)
 
 	// create endpoint and server Http
-	e := host.NewEndpoint(repository.Agent(cache.NamespaceName), nextExchange)
+	e := host.NewEndpoint([]any{repository.Agent(cache.NamespaceName), nextExchange})
 	r := httptest.NewRecorder()
 	e.ServeHTTP(r, req)
 	r.Flush()

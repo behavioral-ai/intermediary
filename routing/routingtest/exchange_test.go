@@ -32,7 +32,7 @@ func ExampleExchange_Override() {
 	req.Header = make(http.Header)
 
 	// create endpoint and run
-	e := host.NewEndpoint(agent)
+	e := host.NewEndpoint([]any{agent})
 	r := httptest.NewRecorder()
 	e.ServeHTTP(r, req)
 	r.Flush()
@@ -72,7 +72,7 @@ func _ExampleExchange() {
 	req.Header = make(http.Header)
 
 	// create endpoint and run
-	e := host.NewEndpoint(agent)
+	e := host.NewEndpoint([]any{agent})
 	r := httptest.NewRecorder()
 	e.ServeHTTP(r, req)
 	r.Flush()
